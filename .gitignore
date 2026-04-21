@@ -1,7 +1,6 @@
 # Environment variables & Secrets
 .env
 .streamlit/secrets.toml
-config/config.py
 
 # Python
 __pycache__/
