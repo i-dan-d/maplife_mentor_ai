@@ -3,7 +3,7 @@ Supabase client module
 """
 
 from supabase import create_client, Client
-from config.config import SUPABASE_URL, SUPABASE_KEY
+from config.config import get_secret
 
 class SupabaseClient:
     def search_documents(self, query_embedding, user_id, threshold=0.1, limit=3):
@@ -23,11 +23,15 @@ class SupabaseClient:
             print(f"Lỗi tìm kiếm RAG: {str(e)}")
             return []
     def __init__(self):
-        if not SUPABASE_URL or not SUPABASE_KEY:
-            raise ValueError("SUPABASE_URL hoặc SUPABASE_KEY chưa được thiết lập.")
+        # CHỈ LẤY CHÌA KHÓA LÚC NÀY (Vì lúc này st.secrets ĐÃ SẴN SÀNG)
+        url = get_secret("SUPABASE_URL")
+        key = get_secret("SUPABASE_KEY")
+        
+        if not url or not key:
+            raise ValueError(f"Chưa có Key! URL: {bool(url)}, KEY: {bool(key)}")
             
         # Khởi tạo kết nối đến Supabase
-        self.client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        self.client: Client = create_client(url, key)
 
     def insert_data(self, table_name, data):
         """
