@@ -44,6 +44,6 @@ Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven app
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/i-dan-d/map_life_demo
-cd map_life_demo
+git clone https://github.com/i-dan-d/maplife_mentor_ai
+cd maplife_mentor_ai
 streamlit run main.py
