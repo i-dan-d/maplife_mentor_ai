@@ -32,8 +32,8 @@ Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven app
 ## 🛠 Technology Stack
 
 - **Frontend**: Streamlit
-- **Backend**: Python (Vanilla)
-- **LLM & Embedding**: OpenAI (`gpt-4o-mini` + `text-embedding-3-small`)
+- **Backend**: Python
+- **LLM & Embedding**: `claude-sonnet-4-6` + `text-embedding-3-small`
 - **Vector Database**: Supabase (pgvector)
 - **Local Vector Search**: FAISS
 - **Structured Database**: Supabase PostgreSQL
@@ -44,6 +44,6 @@ Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven app
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/i-dan-d/map_life_demo
-cd map_life_demo
+git clone https://github.com/i-dan-d/maplife_mentor_ai
+cd maplife_mentor_ai
 streamlit run main.py
