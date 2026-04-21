@@ -70,7 +70,6 @@ def main():
                 if st.button("Đăng nhập", use_container_width=True):
                     res = sign_in_user(email, password)
                     
-                    # Chỉ cần 1 lần kiểm tra if duy nhất ở đây
                     if res and res.user:
                         user_id = res.user.id
                         
@@ -83,16 +82,23 @@ def main():
                                 "email": email,
                                 "profile_data": {}
                             })
-                        # ---------------------------------
                         
-                        # Lưu Cookie & Session
-                        cookie_manager.set("maplife_access_token", res.session.access_token, max_age=604800)
+                        # --- BẢN VÁ LỖI COOKIE CLOUD ---
+                        cookie_manager.set(
+                            "maplife_access_token", 
+                            res.session.access_token, 
+                            max_age=604800,
+                            secure=True,        # BẮT BUỘC: Báo cho trình duyệt đây là web HTTPS an toàn
+                            same_site="none",   # BẮT BUỘC: Cho phép Cookie đâm thủng iframe của Streamlit
+                            key="login_cookie"  # Tránh xung đột khóa
+                        )
                         
                         st.session_state.auth_user = res.user
                         st.session_state.user_id = res.user.id
                         
-                        # ÉP STREAMLIT CHỜ TRÌNH DUYỆT LƯU COOKIE XONG MỚI RERUN
-                        time.sleep(0.5) 
+                        st.success("Đang thiết lập phiên đăng nhập an toàn...")
+                        # TĂNG THỜI GIAN CHỜ LÊN 1.5s ĐỂ BROWSER KỊP LƯU COOKIE TRƯỚC KHI RERUN
+                        time.sleep(1.5) 
                         st.rerun()
             with tab_signup:
                 new_email = st.text_input("Email", key="reg_email")
@@ -116,9 +122,11 @@ def main():
         else:
             st.success(f"Chào, {st.session_state.auth_user.email}")
             if st.button("🚪 Đăng xuất", use_container_width=True):
-                cookie_manager.delete("maplife_access_token")
+                # Khi xóa cũng phải cấp key để tránh lỗi
+                cookie_manager.delete("maplife_access_token", key="logout_cookie")
                 st.session_state.clear()
-                time.sleep(0.5)
+                st.info("Đang đăng xuất...")
+                time.sleep(1.5)
                 st.rerun()
         st.divider()
 
