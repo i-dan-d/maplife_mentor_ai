@@ -19,6 +19,24 @@ st.set_page_config(
     layout="wide"
 )
 def main():
+    # =============== BẮT ĐẦU CHẾ ĐỘ X-QUANG ===============
+    st.title("🛠 Chế độ Debug X-Quang")
+    st.warning("Đang kiểm tra kho báu Secrets trên server...")
+    
+    try:
+        # Kiểm tra xem server có thấy mục Secrets không
+        keys = list(st.secrets.keys())
+        st.write("1. Các chìa khóa server đang cầm:", keys)
+        
+        # Kiểm tra xem file config đang nhận giá trị gì
+        from config.config import SUPABASE_URL
+        st.write("2. File config.py đang đọc ra URL là:", "CÓ DỮ LIỆU" if SUPABASE_URL else "RỖNG (NONE)")
+        
+    except Exception as e:
+        st.error(f"Lỗi hệ thống khi đọc Secrets: {e}")
+        
+    st.stop() # BẮT BUỘC CÓ DÒNG NÀY: Dừng app lại ngay lập tức để không bị văng lỗi
+    # =============== KẾT THÚC CHẾ ĐỘ X-QUANG ===============
     db = SupabaseClient()
     st.sidebar.title("🌱 MAPLIFE")
     st.sidebar.caption("AI Personal Career Mentor")
