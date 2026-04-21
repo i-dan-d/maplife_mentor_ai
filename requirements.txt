@@ -1,0 +1,12 @@
+streamlit>=1.42.0
+supabase==2.15.0
+openai>=1.61.0
+faiss-cpu
+python-dotenv
+pillow
+pandas
+numpy
+plotly
+python-dotenv
+PyPDF2
+extra-streamlit-components

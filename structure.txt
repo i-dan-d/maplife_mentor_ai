@@ -1,0 +1,26 @@
+maplife/
+├── main.py
+├── .streamlit/
+│   └── secrets.toml
+├── config/
+│   └── config.py
+├── core/
+│   ├── rag.py                       # RAG pipeline
+│   ├── openai_client.py             # ← Đã thay (thay vì gemini_client.py)
+│   ├── supabase_client.py
+│   └── data_processor.py
+├── components/
+│   ├── chat.py
+│   ├── personality_test.py
+│   ├── cv_analyzer.py
+│   ├── roadmap.py
+│   ├── progress.py
+│   └── vision_board.py
+├── utils/
+│   ├── helpers.py
+│   └── constants.py
+├── data/
+├── assets/
+├── requirements.txt
+├── .env.example
+└── README.md
