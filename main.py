@@ -11,7 +11,7 @@ from components.progress import progress_tracker
 from components.vision_board import vision_board
 from core.supabase_client import SupabaseClient
 from utils.auth import sign_up_user, sign_in_user
-
+from utils.ui_factory import setup_page_css
 # Các imports components giữ nguyên...
 # Cấu hình trang cơ bản
 st.set_page_config(
@@ -19,33 +19,7 @@ st.set_page_config(
     page_icon="🌱", 
     layout="wide"
 )
-# --- BẮT ĐẦU CẤP ĐỘ 2: CUSTOM CSS ---
-hide_st_style = """
-    <style>
-    /* Ẩn Header, Menu mặc định và Footer của Streamlit */
-    #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Làm đẹp Nút bấm (Bo góc, hiệu ứng nổi lên khi di chuột) */
-    .stButton>button {
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(46, 125, 50, 0.2); /* Đổ bóng màu xanh */
-    }
-    
-    /* Làm đẹp các khung nhập liệu */
-    .stTextInput>div>div>input {
-        border-radius: 6px;
-    }
-    </style>
-"""
-st.markdown(hide_st_style, unsafe_allow_html=True)
-# --- KẾT THÚC CẤP ĐỘ 2 ---
+
 def main():
     # =============== BẮT ĐẦU CHẾ ĐỘ X-QUANG ===============
     # st.title("🛠 Chế độ Debug X-Quang")
@@ -65,6 +39,7 @@ def main():
         
     # st.stop() # BẮT BUỘC CÓ DÒNG NÀY: Dừng app lại ngay lập tức để không bị văng lỗi
     # =============== KẾT THÚC CHẾ ĐỘ X-QUANG ===============
+    setup_page_css()
     db = SupabaseClient()
     
     # Khởi tạo cookie manager
@@ -101,7 +76,7 @@ def main():
         col1, col2, col3 = st.columns([1, 1.2, 1])
         
         with col2:
-            st.markdown("<div style='background-color: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>", unsafe_allow_html=True)
+            st.markdown("<div class='login-wrapper'>", unsafe_allow_html=True)
             tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
             
             with tab_login:
@@ -184,6 +159,15 @@ def main():
         
         # Gọi Component tương ứng
         if choice == "AI Chat":
+            # Khi chọn Chat, chúng ta hiển thị thêm Lịch sử ở Sidebar
+            with st.sidebar:
+                st.subheader("📜 Lịch sử trò chuyện")
+                # Ở đây sau này cậu gọi hàm hiển thị danh sách chat từ DB
+                st.info("Hôm nay: Tư vấn Roadmap AI")
+                st.caption("21/04: Phân tích tính cách")
+                if st.button("➕ Cuộc hội thoại mới", use_container_width=True):
+                    st.session_state.messages = []
+                    st.rerun()
             chat_interface()
         elif choice == "Tính cách":
             personality_test()
