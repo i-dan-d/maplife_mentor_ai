@@ -70,7 +70,7 @@ def main():
         # Tiêu đề Canh giữa
         st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>AI Personal Career Mentor</p>", unsafe_allow_html=True)
-        st.write("")
+        st.write("Duy handsome")
         
         # Dùng st.columns để ép form vào giữa (Tỉ lệ 1 : 1.2 : 1)
         col1, col2, col3 = st.columns([1, 1.2, 1])
@@ -159,15 +159,6 @@ def main():
         
         # Gọi Component tương ứng
         if choice == "AI Chat":
-            # Khi chọn Chat, chúng ta hiển thị thêm Lịch sử ở Sidebar
-            with st.sidebar:
-                st.subheader("📜 Lịch sử trò chuyện")
-                # Ở đây sau này cậu gọi hàm hiển thị danh sách chat từ DB
-                st.info("Hôm nay: Tư vấn Roadmap AI")
-                st.caption("21/04: Phân tích tính cách")
-                if st.button("➕ Cuộc hội thoại mới", use_container_width=True):
-                    st.session_state.messages = []
-                    st.rerun()
             chat_interface()
         elif choice == "Tính cách":
             personality_test()
