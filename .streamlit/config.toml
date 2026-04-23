@@ -1,0 +1,19 @@
+[theme]
+# Màu chủ đạo (Nút bấm, thanh kéo, thanh loading...)
+# Chọn màu Xanh lá đậm (Forest Green) tạo cảm giác an toàn, tin cậy và tăng trưởng
+primaryColor = "#2E7D32"
+
+# Màu nền chính của ứng dụng
+# Xám cực nhạt (Off-white) giúp làm nổi bật các khối màu trắng và dịu mắt khi đọc chữ dài
+backgroundColor = "#F8F9FA"
+
+# Màu nền phụ (Sidebar, khung nhập liệu...)
+# Trắng tinh để tạo sự tương phản nhẹ với nền chính
+secondaryBackgroundColor = "#FFFFFF"
+
+# Màu chữ
+# Đen xám (Dark Slate) thay vì đen tuyền (#000000) giúp chữ sang trọng và chuyên nghiệp hơn
+textColor = "#1F2937"
+
+# Phông chữ mặc định
+font = "sans serif"

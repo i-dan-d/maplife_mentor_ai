@@ -18,6 +18,33 @@ st.set_page_config(
     page_icon="🌱", 
     layout="wide"
 )
+# --- BẮT ĐẦU CẤP ĐỘ 2: CUSTOM CSS ---
+hide_st_style = """
+    <style>
+    /* Ẩn Header, Menu mặc định và Footer của Streamlit */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* Làm đẹp Nút bấm (Bo góc, hiệu ứng nổi lên khi di chuột) */
+    .stButton>button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(46, 125, 50, 0.2); /* Đổ bóng màu xanh */
+    }
+    
+    /* Làm đẹp các khung nhập liệu */
+    .stTextInput>div>div>input {
+        border-radius: 6px;
+    }
+    </style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
+# --- KẾT THÚC CẤP ĐỘ 2 ---
 def main():
     # =============== BẮT ĐẦU CHẾ ĐỘ X-QUANG ===============
     # st.title("🛠 Chế độ Debug X-Quang")
