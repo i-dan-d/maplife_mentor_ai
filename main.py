@@ -66,13 +66,13 @@ def main():
     # st.stop() # BẮT BUỘC CÓ DÒNG NÀY: Dừng app lại ngay lập tức để không bị văng lỗi
     # =============== KẾT THÚC CHẾ ĐỘ X-QUANG ===============
     db = SupabaseClient()
-    st.sidebar.title("🌱 MAPLIFE")
-    st.sidebar.caption("AI Personal Career Mentor")
-    st.sidebar.divider()
+    
     # Khởi tạo cookie manager
     cookie_manager = stx.CookieManager(key="maplife_cookie_mgr")
+    
     if "auth_user" not in st.session_state:
         st.session_state.auth_user = None
+        
     if st.session_state.auth_user is None:
         saved_token = cookie_manager.get("maplife_access_token")
         if saved_token:
@@ -85,138 +85,116 @@ def main():
                 cookie_manager.delete("maplife_access_token")
 
     # ==========================================
-    # 3. GIAO DIỆN SIDEBAR AUTH
+    # 1. GIAO DIỆN ĐĂNG NHẬP (CANH GIỮA MÀN HÌNH)
     # ==========================================
-    with st.sidebar:
-        if st.session_state.auth_user is None: # <--- Dòng này sẽ không bao giờ lỗi nữa
-            st.subheader("🔑 Xác thực")
-            tab_login, tab_signup = st.tabs(["Đăng nhập", "Đăng ký"])
+    if st.session_state.auth_user is None:
+        # Tạo khoảng trống phía trên để đẩy form xuống giữa
+        st.write("")
+        st.write("")
+        
+        # Tiêu đề Canh giữa
+        st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>AI Personal Career Mentor</p>", unsafe_allow_html=True)
+        st.write("")
+        
+        # Dùng st.columns để ép form vào giữa (Tỉ lệ 1 : 1.2 : 1)
+        col1, col2, col3 = st.columns([1, 1.2, 1])
+        
+        with col2:
+            st.markdown("<div style='background-color: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>", unsafe_allow_html=True)
+            tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
             
             with tab_login:
                 email = st.text_input("Email", key="login_email")
                 password = st.text_input("Mật khẩu", type="password", key="login_pass")
                 if st.button("Đăng nhập", use_container_width=True):
                     res = sign_in_user(email, password)
-                    
                     if res and res.user:
                         user_id = res.user.id
-                        
-                        # --- KIỂM TRA VÀ ĐỒNG BỘ DATABASE ---
                         existing_user = db.query_data("users", filters={"id": user_id})
                         if not existing_user:
                             db.insert_data("users", {
-                                "id": user_id,
-                                "name": email.split("@")[0],
-                                "email": email,
-                                "profile_data": {}
+                                "id": user_id, "name": email.split("@")[0], "email": email, "profile_data": {}
                             })
                         
-                        # --- BẢN VÁ LỖI COOKIE CLOUD ---
                         cookie_manager.set(
-                            "maplife_access_token", 
-                            res.session.access_token, 
-                            max_age=604800,
-                            secure=True,        # BẮT BUỘC: Báo cho trình duyệt đây là web HTTPS an toàn
-                            same_site="none",   # BẮT BUỘC: Cho phép Cookie đâm thủng iframe của Streamlit
-                            key="login_cookie"  # Tránh xung đột khóa
+                            "maplife_access_token", res.session.access_token, 
+                            max_age=604800, secure=True, same_site="none", key="login_cookie"
                         )
-                        
                         st.session_state.auth_user = res.user
                         st.session_state.user_id = res.user.id
                         
-                        st.success("Đang thiết lập phiên đăng nhập an toàn...")
-                        # TĂNG THỜI GIAN CHỜ LÊN 1.5s ĐỂ BROWSER KỊP LƯU COOKIE TRƯỚC KHI RERUN
+                        st.success("Đang thiết lập phiên đăng nhập...")
                         time.sleep(1.5) 
                         st.rerun()
+                        
             with tab_signup:
                 new_email = st.text_input("Email", key="reg_email")
                 new_pass = st.text_input("Mật khẩu", type="password", key="reg_pass")
                 if st.button("Tạo tài khoản", use_container_width=True):
                     res = sign_up_user(new_email, new_pass)
                     if res and res.user:
-                        user_id = res.user.id
-                        
-                        # --- ĐOẠN CODE BỔ SUNG FIX LỖI ---
-                        # Ngay khi đăng ký thành công, lưu thẳng vào bảng 'users'
                         db.insert_data("users", {
-                            "id": user_id,
-                            "name": new_email.split("@")[0],
-                            "email": new_email,
-                            "profile_data": {}
+                            "id": res.user.id, "name": new_email.split("@")[0], "email": new_email, "profile_data": {}
                         })
-                        # ---------------------------------
-                        
                         st.success("Đăng ký thành công! Hãy chuyển sang tab Đăng nhập.")
-        else:
-            st.success(f"Chào, {st.session_state.auth_user.email}")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    # ==========================================
+    # 2. GIAO DIỆN CHÍNH (TOP NAVIGATION MENU)
+    # ==========================================
+    else:
+        # Header: Logo bên trái, Xin chào & Đăng xuất bên phải
+        header_col1, header_col2, header_col3 = st.columns([1, 4, 1])
+        with header_col1:
+            st.markdown("<h3 style='color: #2E7D32; margin-top: 0;'>🌱 MAPLIFE</h3>", unsafe_allow_html=True)
+        with header_col3:
+            st.write(f"👋 **{st.session_state.auth_user.email.split('@')[0]}**")
             if st.button("🚪 Đăng xuất", use_container_width=True):
-                # Khi xóa cũng phải cấp key để tránh lỗi
                 cookie_manager.delete("maplife_access_token", key="logout_cookie")
                 st.session_state.clear()
-                st.info("Đang đăng xuất...")
                 time.sleep(1.5)
                 st.rerun()
-        st.divider()
 
-    # 3. Chỉ hiển thị Menu nếu đã đăng nhập
-    if st.session_state.auth_user:
-        with st.sidebar:
-            # Menu xịn sò thay thế cho st.radio
-            choice = option_menu(
-                menu_title="MAPLIFE Điều hướng",  # Tiêu đề menu
-                options=[
-                    "AI Mentor Chat", 
-                    "Trắc nghiệm tính cách", 
-                    "Xây dựng CV", 
-                    "Lộ trình sự nghiệp", 
-                    "Tiến độ", 
-                    "Vision Board"
-                ],
-                # Các icon tương ứng lấy từ thư viện Bootstrap Icons
-                icons=[
-                    "chat-quote-fill", 
-                    "person-lines-fill", 
-                    "file-earmark-person", 
-                    "map-fill", 
-                    "bar-chart-steps", 
-                    "easel-fill"
-                ],
-                menu_icon="compass", # Icon của cái tiêu đề
-                default_index=0,
-                styles={
-                    "container": {"padding": "0!important", "background-color": "transparent"},
-                    "icon": {"color": "#2E7D32", "font-size": "18px"}, 
-                    "nav-link": {
-                        "font-size": "15px", 
-                        "text-align": "left", 
-                        "margin":"0px", 
-                        "--hover-color": "#E8F5E9" # Nền xanh nhạt khi di chuột
-                    },
-                    "nav-link-selected": {
-                        "background-color": "#2E7D32", # Màu nền khi được chọn
-                        "color": "white",              # Màu chữ khi được chọn
-                        "font-weight": "bold"
-                    },
-                }
-            )
+        # Thanh Menu Ngang (Horizontal)
+        choice = option_menu(
+            menu_title=None,  # Ẩn tiêu đề để menu nằm ngang đẹp hơn
+            options=["AI Chat", "Tính cách", "Hồ sơ CV", "Lộ trình", "Tiến độ", "Vision Board"],
+            icons=["chat-quote-fill", "person-lines-fill", "file-earmark-person", "map-fill", "bar-chart-steps", "easel-fill"],
+            default_index=0,
+            orientation="horizontal", # <-- PHÉP MÀU NẰM Ở ĐÂY
+            styles={
+                "container": {"padding": "0!important", "max-width": "100%", "border-radius": "8px", "background-color": "#ffffff", "border": "1px solid #eee"},
+                "icon": {"color": "#2E7D32", "font-size": "16px"}, 
+                "nav-link": {
+                    "font-size": "14px", 
+                    "text-align": "center", 
+                    "margin":"0px", 
+                    "--hover-color": "#E8F5E9"
+                },
+                "nav-link-selected": {
+                    "background-color": "#2E7D32", 
+                    "color": "white", 
+                    "font-weight": "bold"
+                },
+            }
+        )
         
-        st.divider()
+        st.divider() # Đường kẻ phân cách menu và nội dung
         
-        # ĐIỀU HƯỚNG GIAO DIỆN (Routing - Phải cập nhật lại tên cho khớp với menu mới)
-        if choice == "AI Mentor Chat":
+        # Gọi Component tương ứng
+        if choice == "AI Chat":
             chat_interface()
-        elif choice == "Trắc nghiệm tính cách":
+        elif choice == "Tính cách":
             personality_test()
-        elif choice == "Xây dựng CV":
+        elif choice == "Hồ sơ CV":
             cv_analyzer()
-        elif choice == "Lộ trình sự nghiệp":
+        elif choice == "Lộ trình":
             roadmap()
         elif choice == "Tiến độ":
             progress_tracker()
         elif choice == "Vision Board":
             vision_board()
-    else:
-        st.info("👋 Chào mừng bạn đến với MAPLIFE. Vui lòng đăng nhập từ Sidebar để bắt đầu hành trình sự nghiệp.")
 # Bắt đầu chạy ứng dụng (Không còn code test)
 if __name__ == "__main__":
     main()
