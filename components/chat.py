@@ -76,88 +76,53 @@ def chat_interface():
     # Lấy lịch sử chat
     all_history = db_client.query_data("chat_history", filters={"user_id": user_id}) or []
 
-    # ==========================================
-    # 3. VẼ GIAO DIỆN SIDEBAR TỔNG HỢP
-    # ==========================================
-    with st.sidebar:
-        st.divider()
-        st.subheader("🛠 Cài đặt trí nhớ")
-        st.subheader("🗑 Quản lý hội thoại")
-        
-        # Nút xóa lịch sử của phiên chat hiện tại
-        if st.button("Xóa lịch sử đoạn chat này", use_container_width=True):
-            # 1. Gọi lệnh xóa trên Supabase
-            db_client.delete_data("chat_history", {
-                "user_id": user_id, 
-                "session_id": st.session_state.current_session_id
-            })
-            
-            # 2. Xóa dữ liệu trong bộ nhớ tạm của Streamlit
-            st.session_state.messages = []
-            
-            # 3. Thông báo và tải lại trang
-            st.toast("Đã xóa toàn bộ tin nhắn trong phiên này!", icon="🗑️")
-            st.rerun()
+    # 2. CHIA GIAO DIỆN THÀNH 2 CỘT (Tỉ lệ 1:3)
+    col_history, col_chat = st.columns([1, 3], gap="medium")
 
-        st.divider()
-        st.subheader("🗂️ Các cuộc trò chuyện")
+    # --- CỘT BÊN TRÁI: LỊCH SỬ VÀ CÀI ĐẶT ---
+    with col_history:
+        st.markdown("### 📜 Lịch sử")
         if st.button("➕ Đoạn chat mới", use_container_width=True, type="primary"):
             st.session_state.current_session_id = str(uuid.uuid4())
             if "messages" in st.session_state: del st.session_state.messages
             st.rerun()
-
-        # Tạo danh sách các nút bấm cho từng phiên chat
+        
+        st.divider()
+        
+        # Hiển thị danh sách các phiên chat cũ
         sessions = {}
         for msg in sorted(all_history, key=lambda x: x.get('created_at', '')):
             sid = msg.get('session_id')
             if sid and sid not in sessions and msg.get('role') == 'user':
-                sessions[sid] = msg.get('content', '')[:25] + "..."
-                
-        for sid, title in sessions.items():
-            is_current = (sid == st.session_state.current_session_id)
-            if st.button(f"{'📍' if is_current else '💬'} {title}", key=f"btn_{sid}", use_container_width=True):
-                st.session_state.current_session_id = sid
-                if "messages" in st.session_state: del st.session_state.messages
-                st.rerun()
-        # ---------------------------------------------------
-
+                sessions[sid] = msg.get('content', '')[:20] + "..."
+        
+        if not sessions:
+            st.caption("Chưa có lịch sử.")
+        else:
+            for sid, title in sessions.items():
+                is_current = (sid == st.session_state.current_session_id)
+                if st.button(f"{'📍' if is_current else '💬'} {title}", key=f"nav_{sid}", use_container_width=True):
+                    st.session_state.current_session_id = sid
+                    if "messages" in st.session_state: del st.session_state.messages
+                    st.rerun()
+        
         st.divider()
-        # FEATURE: Checkbox chọn sài data
-        use_personal_data = st.checkbox("Sử dụng dữ liệu CV & Tính cách", value=True, help="Nếu chọn, AI sẽ đọc hồ sơ của bạn để tư vấn.")
-        
-        # FEATURE: Xóa dữ liệu
-        with st.expander("🗑 Vùng nguy hiểm"):
-            if st.button("Xóa toàn bộ Hồ sơ/CV", use_container_width=True, type="secondary"):
-                db_client.delete_data("documents", {"metadata->>user_id": user_id})
-                st.success("Đã xóa sạch dữ liệu hồ sơ trên Cloud!")
-                st.rerun()
-                
-            if st.button("Xóa lịch sử Chat này", use_container_width=True, type="secondary"):
-                db_client.delete_data("chat_history", {"user_id": user_id, "session_id": st.session_state.current_session_id})
-                st.session_state.messages = []
-                st.success("Đã dọn dẹp lịch sử chat!")
-                st.rerun()
-    # ==========================================
-    # 4. KHỞI TẠO & XỬ LÝ NỘI DUNG CHAT
-    # ==========================================
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        current_history = [msg for msg in all_history if msg.get('session_id') == st.session_state.current_session_id]
-        current_history.sort(key=lambda x: x.get('created_at', ''))
-        
-        for msg in current_history:
-            if msg.get('role') in ['user', 'assistant'] and msg.get('content'):
-                st.session_state.messages.append({"role": msg['role'], "content": msg['content']})
+        use_personal_data = st.toggle("Sử dụng dữ liệu cá nhân", value=True)
 
-    is_new_chat = (len(st.session_state.messages) == 0)
-    if is_new_chat:
-        with st.chat_message("assistant"):
-            st.markdown("Chào bạn! 👋 Mình có thể giúp gì cho sự nghiệp của bạn hôm nay?")
-            
-    for message in st.session_state.messages:
-        if message["role"] != "system":
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+    # --- CỘT BÊN PHẢI: KHUNG TRÒ CHUYỆN CHÍNH ---
+    with col_chat:
+        st.header("💬 AI Mentor Chat")
+        
+        # Hiển thị thông báo dữ liệu
+        if has_any_data:
+            st.caption("✅ Đã kết nối CV & Tính cách")
+        
+        # Phần hiển thị tin nhắn (Giữ nguyên logic vẽ tin nhắn của cậu)
+        chat_container = st.container(height=500) # Tạo khung cuộn cho chat
+        with chat_container:
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
 
     # --- XỬ LÝ TIN NHẮN MỚI ---
     if prompt := st.chat_input("Nhập câu hỏi của bạn..."):

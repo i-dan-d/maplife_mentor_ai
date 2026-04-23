@@ -17,7 +17,8 @@ from utils.ui_factory import setup_page_css
 st.set_page_config(
     page_title="Map Life", 
     page_icon="🌱", 
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed" #ép mở sidebar
 )
 
 def main():
@@ -70,7 +71,7 @@ def main():
         # Tiêu đề Canh giữa
         st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>AI Personal Career Mentor</p>", unsafe_allow_html=True)
-        st.write("Duy handsome")
+        st.write("")
         
         # Dùng st.columns để ép form vào giữa (Tỉ lệ 1 : 1.2 : 1)
         col1, col2, col3 = st.columns([1, 1.2, 1])
