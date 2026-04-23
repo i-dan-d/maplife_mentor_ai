@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_option_menu import option_menu
 import extra_streamlit_components as stx
 import time
 # Import các components
@@ -159,33 +160,61 @@ def main():
 
     # 3. Chỉ hiển thị Menu nếu đã đăng nhập
     if st.session_state.auth_user:
-        # Gộp tất cả tính năng vào đây
-        menu_options = [
-            "💬 AI Mentor Chat", 
-            "🧪 Trắc nghiệm tính cách", 
-            "📄 Xây dựng Hồ sơ CV", 
-            "🛤️ Lộ trình sự nghiệp", 
-            "📊 Tiến độ", 
-            "🎯 Vision Board"
-        ]
-        choice = st.sidebar.radio("Điều hướng", menu_options)
+        with st.sidebar:
+            # Menu xịn sò thay thế cho st.radio
+            choice = option_menu(
+                menu_title="MAPLIFE Điều hướng",  # Tiêu đề menu
+                options=[
+                    "AI Mentor Chat", 
+                    "Trắc nghiệm tính cách", 
+                    "Xây dựng CV", 
+                    "Lộ trình sự nghiệp", 
+                    "Tiến độ", 
+                    "Vision Board"
+                ],
+                # Các icon tương ứng lấy từ thư viện Bootstrap Icons
+                icons=[
+                    "chat-quote-fill", 
+                    "person-lines-fill", 
+                    "file-earmark-person", 
+                    "map-fill", 
+                    "bar-chart-steps", 
+                    "easel-fill"
+                ],
+                menu_icon="compass", # Icon của cái tiêu đề
+                default_index=0,
+                styles={
+                    "container": {"padding": "0!important", "background-color": "transparent"},
+                    "icon": {"color": "#2E7D32", "font-size": "18px"}, 
+                    "nav-link": {
+                        "font-size": "15px", 
+                        "text-align": "left", 
+                        "margin":"0px", 
+                        "--hover-color": "#E8F5E9" # Nền xanh nhạt khi di chuột
+                    },
+                    "nav-link-selected": {
+                        "background-color": "#2E7D32", # Màu nền khi được chọn
+                        "color": "white",              # Màu chữ khi được chọn
+                        "font-weight": "bold"
+                    },
+                }
+            )
         
         st.divider()
         
-        # ĐIỀU HƯỚNG GIAO DIỆN (Routing)
-        if choice == "💬 AI Mentor Chat":
+        # ĐIỀU HƯỚNG GIAO DIỆN (Routing - Phải cập nhật lại tên cho khớp với menu mới)
+        if choice == "AI Mentor Chat":
             chat_interface()
-        elif choice == "🧪 Trắc nghiệm tính cách":
+        elif choice == "Trắc nghiệm tính cách":
             personality_test()
-        elif choice == "📄 Xây dựng Hồ sơ CV":
+        elif choice == "Xây dựng CV":
             cv_analyzer()
-        elif choice == "🛤️ Lộ trình sự nghiệp":
+        elif choice == "Lộ trình sự nghiệp":
             roadmap()
-        elif choice == "📊 Tiến độ":
+        elif choice == "Tiến độ":
             progress_tracker()
-        elif choice == "🎯 Vision Board":
+        elif choice == "Vision Board":
             vision_board()
-
     else:
         st.info("👋 Chào mừng bạn đến với MAPLIFE. Vui lòng đăng nhập từ Sidebar để bắt đầu hành trình sự nghiệp.")
 # Bắt đầu chạy ứng dụng (Không còn code test)

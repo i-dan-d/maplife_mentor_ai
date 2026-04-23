@@ -10,3 +10,4 @@ plotly
 python-dotenv
 PyPDF2
 extra-streamlit-components
+streamlit-option-menu
