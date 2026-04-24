@@ -27,7 +27,7 @@ def get_secret(key_name, default_value=None):
 OPENAI_API_KEY = get_secret("OPENAI_API_KEY")
 OPENAI_BASE_URL = get_secret("OPENAI_BASE_URL", "https://platform.beeknoee.com/api/v1") 
 
-OPENAI_MODEL = "claude-sonnet-4-6"
+OPENAI_MODEL = "openai/gpt-oss-120b"
 OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIMENSION = 1536
 
