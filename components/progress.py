@@ -1,9 +1,10 @@
 import streamlit as st
 import json
+import random
 from core.supabase_client import SupabaseClient
 
 def progress_tracker():
-    st.header("📊 Theo dõi Tiến độ (Progress Tracker)")
+    st.markdown("<h2 style='text-align: center; color: #2E7D32;'>📊 Theo dõi Tiến độ (Progress Tracker)</h2>", unsafe_allow_html=True)
 
     user_id = st.session_state.get("user_id")
     if not user_id:
@@ -40,63 +41,63 @@ def progress_tracker():
             if task.get("status") == "completed":
                 completed_tasks += 1
 
-    # Tính phần trăm (tránh lỗi chia cho 0)
     progress_percentage = int((completed_tasks / total_tasks) * 100) if total_tasks > 0 else 0
 
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.progress(progress_percentage / 100.0)
-    with col2:
-        st.subheader(f"{progress_percentage}% Hoàn thành")
-        
-    if progress_percentage == 100:
-        st.balloons()
-        st.success("🎉 Xuất sắc! Bạn đã hoàn thành toàn bộ lộ trình này!")
+    # CSS làm mượt thanh Progress & Gạch ngang chữ
+    st.markdown("""
+    <style>
+    .stProgress > div > div > div > div { background-color: #2E7D32; transition: width 0.5s ease-in-out; }
+    .completed-text { text-decoration: line-through; color: #9E9E9E; font-style: italic; transition: all 0.3s; }
+    .pending-text { color: #333; font-weight: 500; transition: all 0.3s; }
+    div[data-testid="stExpander"] { border-radius: 15px !important; border: 1px solid #E8F5E9 !important; margin-bottom: 10px; }
+    </style>
+    """, unsafe_allow_html=True)
 
-    st.divider()
+    with st.container(border=True):
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.write("") 
+            st.progress(progress_percentage / 100.0)
+        with col2:
+            st.markdown(f"<h3 style='color: #2E7D32; text-align: right; margin: 0;'>{progress_percentage}%</h3>", unsafe_allow_html=True)
+            
+        if progress_percentage == 100:
+            st.balloons()
+            st.success("🎉 Xuất sắc! Bạn đã hoàn thành toàn bộ mục tiêu của lộ trình này!")
+
+    st.write("")
 
     # ==========================================
-    # 3. GIAO DIỆN TƯƠNG TÁC (MỞ KHÓA CHECKBOX)
+    # 3. GIAO DIỆN TƯƠNG TÁC (GAMIFICATION)
     # ==========================================
-    updated_roadmap = roadmap_json.copy() # Tạo bản sao để sửa đổi
+    updated_roadmap = roadmap_json.copy() 
     needs_update = False
+    praise_messages = ["Tuyệt vời! 🌟", "Làm tốt lắm! 🔥", "Tiếp tục phát huy nhé! 💪", "Một bước gần hơn tới mục tiêu! 🎯"]
 
     st.markdown(f"### 🎯 Mục tiêu: **{latest_roadmap.get('target_role', '')}**")
-    
+
     for p_idx, phase in enumerate(updated_roadmap.get("phases", [])):
-        st.markdown(f"#### 🚩 {phase.get('phase_name')}")
-        
-        for t_idx, task in enumerate(phase.get("milestones", [])):
-            is_completed = (task.get("status") == "completed")
-            
-            # Icon trang trí
-            task_type = task.get("type", "skill")
-            icon = "📘" if task_type == "skill" else "📜" if task_type == "cert" else "🚀" if task_type == "project" else "📌"
-            
-            # Tạo key ĐỘC NHẤT cho mỗi checkbox để Streamlit không bị nhầm lẫn
-            task_key = f"task_{roadmap_id}_{p_idx}_{t_idx}"
-            
-            # ĐÂY CHÍNH LÀ CHECKBOX "SỐNG" (Không có disabled=True)
-            new_status = st.checkbox(
-                f"{icon} {task.get('task', '')} ({task.get('estimated_hours', 0)}h)", 
-                value=is_completed, 
-                key=task_key
-            )
+        with st.expander(f"🚩 {phase.get('phase_name')}", expanded=True):
+            for t_idx, task in enumerate(phase.get("milestones", [])):
+                is_completed = (task.get("status") == "completed")
+                
+                icon = "✅" if is_completed else "📌"
+                text_class = "completed-text" if is_completed else "pending-text"
+                task_key = f"task_{roadmap_id}_{p_idx}_{t_idx}"
+                
+                col_check, col_text = st.columns([0.5, 9.5])
+                with col_check:
+                    new_status = st.checkbox("", value=is_completed, key=task_key, label_visibility="collapsed")
+                with col_text:
+                    st.markdown(f"<span class='{text_class}'>{icon} {task.get('task', '')} ({task.get('estimated_hours', 0)}h)</span>", unsafe_allow_html=True)
 
-            # ==========================================
-            # 4. BẮT SỰ KIỆN CLICK & LƯU DATABASE
-            # ==========================================
-            if new_status != is_completed:
-                task["status"] = "completed" if new_status else "pending"
-                needs_update = True
+                if new_status != is_completed:
+                    task["status"] = "completed" if new_status else "pending"
+                    needs_update = True
+                    if new_status: st.toast(random.choice(praise_messages), icon="🎉")
 
-    # Cập nhật một lần duy nhất xuống Database nếu có thay đổi
+    # Cập nhật Database
     if needs_update:
         with st.spinner("Đang lưu tiến độ..."):
-            db_client.update_data(
-                table_name="user_roadmaps",
-                match_conditions={"id": roadmap_id},
-                update_data={"roadmap_json": updated_roadmap} # Lưu lại toàn bộ khối JSON mới
-            )
-        st.toast("Đã lưu tiến độ!", icon="💾")
-        st.rerun() # Tải lại trang ngay lập tức để thanh Progress Bar chạy lên
+            db_client.update_data("user_roadmaps", {"id": roadmap_id}, {"roadmap_json": updated_roadmap})
+        st.rerun()
