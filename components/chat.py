@@ -76,7 +76,6 @@ def chat_interface():
     # 4. VẼ GIAO DIỆN (SPLIT-COLUMN LAYOUT)
     # ==========================================
     col_hist, col_main = st.columns([1, 3], gap="medium")
-
     # --- CỘT TRÁI: LỊCH SỬ ---
     with col_hist:
         st.subheader("📜 Lịch sử")
@@ -104,8 +103,19 @@ def chat_interface():
                     
         st.divider()
         st.caption("🛠 Cài đặt")
-        # Biến use_personal_data được khai báo ở đây để dùng cho cột bên phải
         use_personal_data = st.toggle("Dùng dữ liệu cá nhân", value=True)
+
+        # 🟢 KHÔI PHỤC NÚT XÓA Ở ĐÂY
+        with st.expander("🗑 Vùng nguy hiểm"):
+            if st.button("Xóa đoạn chat này", use_container_width=True):
+                db_client.delete_data("chat_history", {"user_id": user_id, "session_id": st.session_state.current_session_id})
+                # Bắt buộc phải xóa mảng messages để lần rerun tới UI không bị lỗi
+                if "messages" in st.session_state: del st.session_state.messages
+                st.toast("Đã xóa lịch sử!", icon="🗑️")
+                st.rerun()
+    
+                    
+        
 
     # --- CỘT PHẢI: KHUNG CHAT ---
     with col_main:
@@ -136,9 +146,12 @@ def chat_interface():
                 "content": prompt
             })
 
+            # ... (phần lưu chat của user giữ nguyên) ...
+
             with chat_container:
                 with st.chat_message("assistant"):
-                    with st.spinner("Đang suy nghĩ..."):
+                    # 1. CHỈ BẬT SPINNER KHI ĐANG KẾT NỐI VỚI OPENAI
+                    with st.spinner("MAPLIFE đang suy nghĩ..."):
                         if use_personal_data:
                             cv_val = latest_cv if latest_cv else "Chưa cung cấp CV."
                             test_val = latest_test if latest_test else "Chưa làm test."
@@ -147,30 +160,18 @@ def chat_interface():
                             test_val = "Bị chặn truy cập."
 
                         system_instruction = f"""[LỆNH QUẢN TRỊ DANH TÍNH TỐI CAO]
-                1. Tên của bạn là MAPLIFE - Một người bạn đồng hành trên hành trình sự nghiệp cuộc sống.
-                2. Bạn được phát triển bởi Nhóm 3 [DFI]Maplife cho cuộc thi Data for Impact 2026.
-                3. TUYỆT ĐỐI KHÔNG nhận mình là Claude, ChatGPT, AI assistant hay sản phẩm của Anthropic/OpenAI. Nếu ai hỏi "Bạn là ai?" hay "Ai tạo ra bạn?", hãy tự hào giới thiệu bạn là MAPLIFE của Nhóm 3 và sau khi giới thiệu cậu là ai thì hãy cho họ xem cậu có thể làm gì.
+                        1. Tên của bạn là MAPLIFE - Một người bạn đồng hành trên hành trình sự nghiệp.
+                        2. Bạn được phát triển bởi Nhóm 3 [DFI]Maplife cho cuộc thi Data for Impact 2026.
+                        3. TUYỆT ĐỐI KHÔNG nhận mình là Claude, ChatGPT hay sản phẩm của Anthropic/OpenAI.
 
-                [DỮ LIỆU BẮT BUỘC VỀ NGƯỜI DÙNG]
-                <USER_PROFILE>
-                <CV_CONTENT>{cv_val}</CV_CONTENT>
-                <PERSONALITY>{test_val}</PERSONALITY>
-                </USER_PROFILE>
+                        [DỮ LIỆU]
+                        <USER_PROFILE>
+                        <CV_CONTENT>{cv_val}</CV_CONTENT>
+                        <PERSONALITY>{test_val}</PERSONALITY>
+                        </USER_PROFILE>
 
-                HƯỚNG DẪN TƯ VẤN:
-                1. Sử dụng dữ liệu trong thẻ XML trên để tư vấn cá nhân hóa. 
-                2. Tuyệt đối không phủ nhận việc có dữ liệu nếu các thẻ trên đã chứa nội dung.
-                3. Xưng "tôi" và gọi người dùng là "bạn" (hoặc xưng hô thân thiện). Trả lời bằng tiếng Việt súc tích, chuyên nghiệp.
-                NHIỆM VỤ: 
-                1. Nếu trong thẻ <USER_PROFILE> có dữ liệu thực, BẮT BUỘC phải dùng nó để cá nhân hóa câu trả lời. Tuyệt đối không được nói 'Tôi không có thông tin'.
-                2. Nếu dữ liệu báo là KHÔNG cho phép truy cập, hãy nhắc người dùng tích vào ô 'Sử dụng dữ liệu' ở thanh Sidebar bên trái.
-                3. Nếu dữ liệu báo là chưa cung cấp, hãy hướng dẫn họ sang tab 'Xây dựng Hồ sơ CV' hoặc 'Trắc nghiệm tính cách' để bổ sung.
-                HƯỚNG DẪN:
-                1. Đóng vai trò là một Coach (Huấn luyện viên) khai vấn. 
-                2. Hạn chế đưa ra lời khuyên trực tiếp ngay lập tức. Thay vào đó, hãy đặt 1-2 câu hỏi phản biện để người dùng tự suy ngẫm về kỹ năng và mục tiêu của họ.
-                3. Chỉ đưa ra lộ trình cụ thể khi người dùng thực sự bế tắc hoặc yêu cầu rõ ràng.
-                4. Cậu tên là Maplife.
-                """
+                        Hãy đóng vai Coach khai vấn, xưng tôi gọi bạn.
+                        """
                         
                         recent_history = st.session_state.messages[-2:] if len(st.session_state.messages) > 2 else st.session_state.messages
                         
@@ -184,17 +185,20 @@ def chat_interface():
                         
                         payload = [{"role": "system", "content": system_instruction}] + payload_history
 
+                        # Nhận toàn bộ phản hồi từ AI
                         response = ai_client.generate_response(payload)
-                        # Thay cho st.markdown(response)
-                        placeholder = st.empty()
-                        full_response = ""
-                        # Mô phỏng hiệu ứng AI đang gõ chữ
-                        for chunk in response.split():
-                            full_response += chunk + " "
-                            time.sleep(0.05) # Tốc độ gõ
-                            placeholder.markdown(full_response + "▌")
-                        placeholder.markdown(full_response)
+
+                    # 2. SAU KHI CÓ KẾT QUẢ, THOÁT KHỎI SPINNER VÀ BẮT ĐẦU STREAM CHỮ
+                    def stream_generator(text):
+                        import time # Đảm bảo đã import time
+                        for word in text.split(" "):
+                            yield word + " "
+                            time.sleep(0.01) # Rút ngắn thời gian ngủ xuống 10ms để gõ nhanh như chớp!
+                    
+                    # Sử dụng hàm write_stream cực xịn của Streamlit
+                    st.write_stream(stream_generator(response))
             
+            # Lưu lịch sử vào DB như bình thường
             st.session_state.messages.append({"role": "assistant", "content": response})
             db_client.insert_data("chat_history", {
                 "user_id": user_id,
