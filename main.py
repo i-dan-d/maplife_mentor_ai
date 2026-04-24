@@ -20,7 +20,57 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed" #ép mở sidebar
 )
-
+def render_reset_password_form():
+    """Vẽ giao diện Đặt lại mật khẩu mới khi user click từ Email"""
+    st.write("")
+    st.write("")
+    
+    st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>Tạo mật khẩu mới của bạn</p>", unsafe_allow_html=True)
+    st.write("")
+    
+    # Căn giữa form giống hệt trang đăng nhập
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    
+    with col2:
+        with st.container(border=True):
+            st.info("💡 Mã xác thực từ email đã được ghi nhận. Vui lòng nhập mật khẩu mới.")
+            
+            new_password = st.text_input("Mật khẩu mới (Tối thiểu 6 ký tự)", type="password", key="reset_new_pass")
+            confirm_password = st.text_input("Xác nhận mật khẩu", type="password", key="reset_confirm_pass")
+            
+            st.write("")
+            if st.button("💾 Lưu mật khẩu & Đăng nhập", type="primary", use_container_width=True):
+                if not new_password or not confirm_password:
+                    st.warning("Vui lòng điền đầy đủ thông tin.")
+                elif new_password != confirm_password:
+                    st.error("Mật khẩu xác nhận không khớp!")
+                elif len(new_password) < 6:
+                    st.warning("Mật khẩu quá ngắn. Vui lòng nhập ít nhất 6 ký tự.")
+                else:
+                    with st.spinner("Đang cập nhật vào hệ thống bảo mật..."):
+                        # Gọi hàm update từ utils.auth
+                        from utils.auth import update_password
+                        success, msg = update_password(new_password)
+                        
+                        if success:
+                            st.success(msg)
+                            st.balloons()
+                            import time
+                            time.sleep(2)
+                            # Thành công thì xóa trạng thái reset để quay về màn hình Login
+                            st.session_state.reset_mode = False
+                            st.query_params.clear() # Xóa luôn param trên thanh địa chỉ cho sạch
+                            st.rerun()
+                        else:
+                            st.error(msg)
+            
+            st.divider()
+            # Nút "Quay xe" nếu người dùng đổi ý hoặc click nhầm link
+            if st.button("Trở về trang Đăng nhập", use_container_width=True):
+                st.session_state.reset_mode = False
+                st.query_params.clear()
+                st.rerun()
 def main():
     
     # =============== BẮT ĐẦU CHẾ ĐỘ X-QUANG ===============
@@ -212,54 +262,3 @@ def main():
 # Bắt đầu chạy ứng dụng (Không còn code test)
 if __name__ == "__main__":
     main()
-def render_reset_password_form():
-    """Vẽ giao diện Đặt lại mật khẩu mới khi user click từ Email"""
-    st.write("")
-    st.write("")
-    
-    st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>Tạo mật khẩu mới của bạn</p>", unsafe_allow_html=True)
-    st.write("")
-    
-    # Căn giữa form giống hệt trang đăng nhập
-    col1, col2, col3 = st.columns([1, 1.2, 1])
-    
-    with col2:
-        with st.container(border=True):
-            st.info("💡 Mã xác thực từ email đã được ghi nhận. Vui lòng nhập mật khẩu mới.")
-            
-            new_password = st.text_input("Mật khẩu mới (Tối thiểu 6 ký tự)", type="password", key="reset_new_pass")
-            confirm_password = st.text_input("Xác nhận mật khẩu", type="password", key="reset_confirm_pass")
-            
-            st.write("")
-            if st.button("💾 Lưu mật khẩu & Đăng nhập", type="primary", use_container_width=True):
-                if not new_password or not confirm_password:
-                    st.warning("Vui lòng điền đầy đủ thông tin.")
-                elif new_password != confirm_password:
-                    st.error("Mật khẩu xác nhận không khớp!")
-                elif len(new_password) < 6:
-                    st.warning("Mật khẩu quá ngắn. Vui lòng nhập ít nhất 6 ký tự.")
-                else:
-                    with st.spinner("Đang cập nhật vào hệ thống bảo mật..."):
-                        # Gọi hàm update từ utils.auth
-                        from utils.auth import update_password
-                        success, msg = update_password(new_password)
-                        
-                        if success:
-                            st.success(msg)
-                            st.balloons()
-                            import time
-                            time.sleep(2)
-                            # Thành công thì xóa trạng thái reset để quay về màn hình Login
-                            st.session_state.reset_mode = False
-                            st.query_params.clear() # Xóa luôn param trên thanh địa chỉ cho sạch
-                            st.rerun()
-                        else:
-                            st.error(msg)
-            
-            st.divider()
-            # Nút "Quay xe" nếu người dùng đổi ý hoặc click nhầm link
-            if st.button("Trở về trang Đăng nhập", use_container_width=True):
-                st.session_state.reset_mode = False
-                st.query_params.clear()
-                st.rerun()

@@ -1,5 +1,5 @@
 """
-Chat component module - Bản hoàn thiện Split-Column & Session State
+Chat component module - Tích hợp Knowledge Router Đa Nguồn (RAG)
 """
 import streamlit as st
 import uuid
@@ -76,6 +76,7 @@ def chat_interface():
     # 4. VẼ GIAO DIỆN (SPLIT-COLUMN LAYOUT)
     # ==========================================
     col_hist, col_main = st.columns([1, 3], gap="medium")
+    
     # --- CỘT TRÁI: LỊCH SỬ ---
     with col_hist:
         st.subheader("📜 Lịch sử")
@@ -105,17 +106,12 @@ def chat_interface():
         st.caption("🛠 Cài đặt")
         use_personal_data = st.toggle("Dùng dữ liệu cá nhân", value=True)
 
-        # 🟢 KHÔI PHỤC NÚT XÓA Ở ĐÂY
         with st.expander("🗑 Vùng nguy hiểm"):
             if st.button("Xóa đoạn chat này", use_container_width=True):
                 db_client.delete_data("chat_history", {"user_id": user_id, "session_id": st.session_state.current_session_id})
-                # Bắt buộc phải xóa mảng messages để lần rerun tới UI không bị lỗi
                 if "messages" in st.session_state: del st.session_state.messages
                 st.toast("Đã xóa lịch sử!", icon="🗑️")
                 st.rerun()
-    
-                    
-        
 
     # --- CỘT PHẢI: KHUNG CHAT ---
     with col_main:
@@ -125,14 +121,12 @@ def chat_interface():
         else:
             st.caption("⚠️ Chưa có dữ liệu hồ sơ")
 
-        # Hiển thị tin nhắn cũ
         chat_container = st.container(height=500)
         with chat_container:
             for message in st.session_state.messages:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
 
-        # Nhập liệu và Xử lý AI
         if prompt := st.chat_input("Hỏi MAPLIFE..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
             with chat_container:
@@ -146,59 +140,107 @@ def chat_interface():
                 "content": prompt
             })
 
-            # ... (phần lưu chat của user giữ nguyên) ...
-
             with chat_container:
                 with st.chat_message("assistant"):
-                    # 1. CHỈ BẬT SPINNER KHI ĐANG KẾT NỐI VỚI OPENAI
-                    with st.spinner("MAPLIFE đang suy nghĩ..."):
+                    with st.spinner("MAPLIFE đang tra cứu dữ liệu ngành..."):
+                        
+                        # ==========================================
+                        # 🌟 KIẾN TRÚC MỚI: BỘ ĐIỀU HƯỚNG TRI THỨC LÊN NGÔI (ROUTER)
+                        # ==========================================
+                        prompt_lower = prompt.lower()
+                        matched_tables = set() # Dùng set để tránh trùng lặp bảng
+
+                        # Từ điển định tuyến: Dễ dàng thêm từ khóa hoặc thêm bảng mới sau này
+                        routing_rules = {
+                            "book": ["sách", "đọc", "tài liệu", "giáo trình", "book"],
+                            "courses": ["khóa học", "chứng chỉ", "đào tạo", "học", "course"],
+                            "reddit_amas": ["kinh nghiệm", "thực tế", "phỏng vấn", "khuyên", "review", "làm sao"],
+                            "occupations": ["ngành", "nghề", "lương", "công việc", "tương lai", "lộ trình", "jd"]
+                        }
+
+                        # Quét câu hỏi xem dính từ khóa của bảng nào
+                        for table, keywords in routing_rules.items():
+                            if any(kw in prompt_lower for kw in keywords):
+                                matched_tables.add(table)
+
+                        # Nếu câu hỏi quá chung chung không trúng từ nào, chọc vào 2 bảng bao quát nhất
+                        if not matched_tables:
+                            matched_tables = {"occupations", "reddit_amas"}
+
+                        internet_context = ""
+                        try:
+                            # 1. Mã hóa câu hỏi thành Vector
+                            prompt_embedding = ai_client.generate_embedding(prompt)
+                            
+                            # 2. Truy xuất dữ liệu từ các bảng đã được định tuyến
+                            for table in matched_tables:
+                                res = db_client.client.rpc('match_knowledge', {
+                                    'query_embedding': prompt_embedding,
+                                    'match_threshold': 0.72, # Độ chính xác trên 72% mới lấy
+                                    'match_count': 2,        # Lấy 2 kết quả tốt nhất của mỗi bảng
+                                    'table_name': table
+                                }).execute()
+                                
+                                if res.data:
+                                    internet_context += f"\n--- TRÍCH XUẤT TỪ: {table.upper()} ---\n"
+                                    internet_context += "\n".join([d['content'] for d in res.data])
+                        except Exception as e:
+                            print(f"Lỗi hệ thống RAG: {e}")
+
+                        # ==========================================
+                        # LẮP RÁP PROMPT CHO AI
+                        # ==========================================
                         if use_personal_data:
                             cv_val = latest_cv if latest_cv else "Chưa cung cấp CV."
-                            test_val = latest_test if latest_test else "Chưa làm test."
+                            test_val = latest_test if latest_test else "Chưa làm bài test tính cách."
                         else:
                             cv_val = "Bị chặn truy cập."
                             test_val = "Bị chặn truy cập."
 
                         system_instruction = f"""[LỆNH QUẢN TRỊ DANH TÍNH TỐI CAO]
                         1. Tên của bạn là MAPLIFE - Một người bạn đồng hành trên hành trình sự nghiệp.
-                        2. Bạn được phát triển bởi Nhóm 3 [DFI]Maplife cho cuộc thi Data for Impact 2026.
+                        2. Bạn được phát triển bởi Nhóm 3 [DFI]Maplife.
                         3. TUYỆT ĐỐI KHÔNG nhận mình là Claude, ChatGPT hay sản phẩm của Anthropic/OpenAI.
 
-                        [DỮ LIỆU]
-                        <USER_PROFILE>
+                        [1. DỮ LIỆU CÁ NHÂN CỦA USER]
                         <CV_CONTENT>{cv_val}</CV_CONTENT>
                         <PERSONALITY>{test_val}</PERSONALITY>
-                        </USER_PROFILE>
 
-                        Hãy đóng vai Coach khai vấn, xưng tôi gọi bạn.
+                        [2. DỮ LIỆU KIẾN THỨC CHUYÊN NGÀNH (BẮT BUỘC THAM KHẢO NẾU CÓ)]
+                        Dưới đây là các tài liệu thực tế trích xuất từ database để trả lời câu hỏi:
+                        <KNOWLEDGE_BASE>
+                        {internet_context if internet_context else "Không có dữ liệu ngoại vi nào khớp với câu hỏi này."}
+                        </KNOWLEDGE_BASE>
+
+                        Hãy đóng vai Coach khai vấn, xưng "tôi" gọi "bạn". 
+                        Nếu bạn sử dụng thông tin từ KNOWLEDGE_BASE, hãy khéo léo lồng ghép nó vào lời khuyên.
                         """
                         
-                        recent_history = st.session_state.messages[-2:] if len(st.session_state.messages) > 2 else st.session_state.messages
+                        recent_history = st.session_state.messages[-3:] if len(st.session_state.messages) > 3 else st.session_state.messages
                         
                         payload_history = []
                         for idx, msg in enumerate(recent_history):
                             if idx == len(recent_history) - 1 and msg["role"] == "user":
-                                hidden_command = f"{msg['content']}\n\n[System Note: Hãy trả lời với tư cách MAPLIFE do Nhóm 3 tạo ra]."
+                                hidden_command = f"{msg['content']}\n\n[System Note: Nhớ tuân thủ vai trò MAPLIFE do Nhóm 3 tạo ra]."
                                 payload_history.append({"role": "user", "content": hidden_command})
                             else:
                                 payload_history.append(msg)
                         
                         payload = [{"role": "system", "content": system_instruction}] + payload_history
 
-                        # Nhận toàn bộ phản hồi từ AI
+                        # Gọi OpenAI
                         response = ai_client.generate_response(payload)
 
-                    # 2. SAU KHI CÓ KẾT QUẢ, THOÁT KHỎI SPINNER VÀ BẮT ĐẦU STREAM CHỮ
+                    # Hiệu ứng gõ chữ
                     def stream_generator(text):
-                        import time # Đảm bảo đã import time
+                        import time
                         for word in text.split(" "):
                             yield word + " "
-                            time.sleep(0.01) # Rút ngắn thời gian ngủ xuống 10ms để gõ nhanh như chớp!
+                            time.sleep(0.01)
                     
-                    # Sử dụng hàm write_stream cực xịn của Streamlit
                     st.write_stream(stream_generator(response))
             
-            # Lưu lịch sử vào DB như bình thường
+            # Lưu Data
             st.session_state.messages.append({"role": "assistant", "content": response})
             db_client.insert_data("chat_history", {
                 "user_id": user_id,

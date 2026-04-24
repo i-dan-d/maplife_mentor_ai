@@ -74,29 +74,23 @@ def roadmap():
     # 1. LỊCH SỬ & QUẢN LÝ DỮ LIỆU
     # ==========================================
     existing_roadmaps = db_client.query_data("user_roadmaps", filters={"user_id": user_id}) or []
-    # Sắp xếp từ mới nhất đến cũ nhất
     sorted_roadmaps = sorted(existing_roadmaps, key=lambda x: x.get('created_at', ''), reverse=True)
     latest_roadmap = sorted_roadmaps[0] if sorted_roadmaps else None
 
     with st.expander("🕒 Lịch sử & Quản lý Lộ trình", expanded=False):
         if sorted_roadmaps:
             st.markdown(f"**Hệ thống đang lưu trữ {len(sorted_roadmaps)} phiên bản lộ trình của bạn:**")
-            
-            # Duyệt qua từng lộ trình trong lịch sử để tạo list
             for idx, rm in enumerate(sorted_roadmaps):
                 with st.container(border=True):
                     c_info, c_del = st.columns([4, 1], vertical_alignment="center")
                     with c_info:
-                        # Đánh dấu bản mới nhất cho người dùng dễ nhận biết
                         is_latest_tag = "🌟 **(Đang áp dụng)**" if idx == 0 else "🕒 (Bản lưu trữ)"
                         st.markdown(f"**{rm.get('target_role', 'Chưa rõ mục tiêu')}** {is_latest_tag}")
                         st.caption(f"Thời gian tạo: {rm.get('created_at', 'Không rõ')[:16]} | Khung thời gian: {rm.get('timeframe', '')}")
                     with c_del:
-                        # Mỗi lộ trình có một nút Xóa với key độc nhất (dựa vào ID)
                         if st.button("🗑️ Xóa bản này", key=f"del_history_{rm['id']}", type="secondary", use_container_width=True):
                             db_client.delete_data("user_roadmaps", {"id": rm['id']})
                             st.toast("Đã dọn dẹp lộ trình cũ!", icon="✅")
-                            import time
                             time.sleep(1)
                             st.rerun()
         else:
@@ -104,7 +98,9 @@ def roadmap():
 
     st.divider()
 
+    # ==========================================
     # 2. GIAO DIỆN CHÍNH
+    # ==========================================
     with st.container(border=True):
         tab_view, tab_create = st.tabs(["🗺️ Lộ trình của tôi", "✨ AI Thiết kế Lộ trình mới"])
 
@@ -133,17 +129,19 @@ def roadmap():
                 st.markdown("---")
                 st.caption("💡 Tùy chọn cách AI xây dựng lộ trình cho bạn:")
                 
-                # TẠO 2 NÚT SUBMIT SONG SONG
                 btn_col1, btn_col2 = st.columns(2)
                 with btn_col1:
                     submit_pivot = st.form_submit_button("🔄 Kế thừa tiến độ (Chuyển nhánh)", type="primary")
                 with btn_col2:
                     submit_new = st.form_submit_button("✨ Xây lại từ đầu", type="secondary")
 
-            # XỬ LÝ KHI NGƯỜI DÙNG BẤM 1 TRONG 2 NÚT
+            # ==========================================
+            # 3. LOGIC TẠO LỘ TRÌNH ĐA NGUỒN (MULTI-SOURCE RAG)
+            # ==========================================
             if (submit_pivot or submit_new) and target_role:
-                keep_progress = submit_pivot # True nếu chọn Kế thừa
+                keep_progress = submit_pivot 
                 
+                # A. Tìm các kỹ năng đã hoàn thành (Kế thừa)
                 done_skills = []
                 if keep_progress and latest_roadmap:
                     old_json = latest_roadmap['roadmap_json']
@@ -156,49 +154,82 @@ def roadmap():
                             if m.get("status") == "completed":
                                 done_skills.append(m.get("task"))
 
-                with st.spinner("🔄 Đang phân tích dữ liệu..."):
-                    all_docs = db_client.query_data("documents", select_query="id, content, metadata") or []
-                    latest_cv, latest_test = "", ""
-                    for doc in all_docs:
-                        meta = doc.get("metadata", {})
-                        if isinstance(meta, str):
-                            try: meta = json.loads(meta)
-                            except: pass
-                        if str(meta.get("user_id")) == str(user_id):
-                            if meta.get("source") in ["pdf_upload", "manual_form"]:
-                                latest_cv = doc.get('content')
-                            elif meta.get("source") == "personality_test":
-                                latest_test = doc.get('content')
+                # B. Lấy CV & Bài test tính cách
+                with st.spinner("🔄 Đang phân tích hồ sơ cá nhân..."):
+                    all_docs = db_client.query_data("documents", filters={"metadata->>user_id": user_id}) or []
+                    latest_cv = next((d['content'] for d in all_docs if d['metadata'].get('source') in ['pdf_upload', 'manual_form']), "")
+                    latest_test = next((d['content'] for d in all_docs if d['metadata'].get('source') == 'personality_test'), "")
 
-                with st.spinner("🧠 AI đang tính toán lộ trình..."):
+                # C. TRUY XUẤT ĐA BẢNG TỪ SUPABASE (THÔNG QUA VECTOR)
+                with st.spinner("🔍 Đang truy xuất tri thức từ Sách, Khóa học và Reddit..."):
+                    collected_knowledge = ""
+                    try:
+                        # 1. Tạo Vector cho Mục tiêu nghề nghiệp
+                        query_embedding = ai_client.generate_embedding(target_role)
+                        
+                        if query_embedding:
+                            # 2. Quét qua 4 bảng trên Supabase
+                            tables = ["reddit_amas", "book", "courses", "occupations"]
+                            for table in tables:
+                                try:
+                                    res = db_client.client.rpc('match_knowledge', {
+                                        'query_embedding': query_embedding,
+                                        'match_threshold': 0.7, # Chỉ lấy dữ liệu khớp trên 70%
+                                        'match_count': 2,       # Lấy 2 kết quả tốt nhất mỗi bảng
+                                        'table_name': table
+                                    }).execute()
+                                    
+                                    # 3. Nếu tìm thấy, ghép vào khối Knowledge Base
+                                    if res.data:
+                                        collected_knowledge += f"\n--- TÀI LIỆU TỪ BẢNG: {table.upper()} ---\n"
+                                        collected_knowledge += "\n".join([d['content'] for d in res.data])
+                                except Exception as e:
+                                    print(f"Bỏ qua bảng {table} do chưa có dữ liệu hoặc lỗi: {e}")
+                    except Exception as e:
+                        print(f"Lỗi tạo Embedding: {e}")
+
+                # D. GỌI AI THIẾT KẾ LỘ TRÌNH
+                with st.spinner("🧠 MAPLIFE đang vẽ lộ trình tối ưu nhất..."):
                     skills_context = f"DỮ LIỆU ĐÃ CÓ: Người dùng ĐÃ THÀNH THẠO các kỹ năng: {', '.join(done_skills)}. KHÔNG bắt học lại các phần này, hãy dùng nó làm nền tảng đầu tiên." if done_skills else ""
                     
                     system_prompt = f"""Bạn là MAPLIFE AI, Kiến trúc sư Sự nghiệp.
+                    MỤC TIÊU: {target_role} | THỜI GIAN: {timeframe}
+                    
+                    [1. HỒ SƠ CÁ NHÂN CẦN PHÙ HỢP]
                     CV: {latest_cv[:500] if latest_cv else 'Trống'}
                     Tính cách: {latest_test if latest_test else 'Trống'}
-                    MỤC TIÊU: {target_role} | THỜI GIAN: {timeframe}
                     {skills_context}
+
+                    [2. DỮ LIỆU THỰC TẾ (BẮT BUỘC SỬ DỤNG)]
+                    Dưới đây là sách, khóa học và kinh nghiệm thực tế liên quan đến {target_role}:
+                    <KNOWLEDGE_BASE>
+                    {collected_knowledge if collected_knowledge else "Không tìm thấy dữ liệu mẫu."}
+                    </KNOWLEDGE_BASE>
+                    
+                    YÊU CẦU ĐẶC BIỆT: Hãy thiết kế lộ trình thực tế. Cố gắng lồng ghép cụ thể tên các cuốn sách hoặc khóa học từ <KNOWLEDGE_BASE> vào các nhiệm vụ (milestones) trong lộ trình.
 
                     Trả về DUY NHẤT 1 JSON:
                     {{
                       "target_role": "{target_role}", "timeframe": "{timeframe}", "overall_strategy": "...",
                       "phases": [ {{ "phase_name": "...", "milestones": [ {{"task": "...", "status": "pending", "type": "skill", "estimated_hours": 50}} ] }} ]
                     }}
+                    Lưu ý: "type" chỉ được chọn 1 trong: skill, cert, project, knowledge.
                     """
                     try:
                         raw_response = ai_client.generate_response([{"role": "system", "content": system_prompt}], max_tokens=5000)
                         roadmap_data = json.loads(clean_json_string(raw_response))
                         
-                        # Nhồi lại các kỹ năng đã có vào Phase đầu tiên để đồng bộ UI
+                        # Kế thừa UI
                         if keep_progress and done_skills:
                             inherited_phase = {"phase_name": "Nền tảng đã tích lũy", "milestones": []}
                             for skill in done_skills:
                                 inherited_phase["milestones"].append({"task": skill, "status": "completed", "type": "skill"})
                             roadmap_data["phases"].insert(0, inherited_phase)
 
+                        # Lưu DB
                         db_client.insert_data("user_roadmaps", {"user_id": user_id, "target_role": target_role, "timeframe": timeframe, "roadmap_json": roadmap_data})
                         st.success("🎉 Tạo lộ trình thành công!")
                         time.sleep(1)
                         st.rerun()
                     except Exception as e:
-                        st.error("AI đang quá tải, vui lòng thử lại!")
+                        st.error(f"AI đang quá tải hoặc lỗi định dạng: {e}")
