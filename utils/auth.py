@@ -41,3 +41,11 @@ def reset_password(email: str):
         elif "rate_limit" in error_msg.lower():
             return False, "Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút."
         return False, f"Lỗi hệ thống: {error_msg}"
+def update_password(new_password: str):
+    try:
+        db = SupabaseClient()
+        # Supabase tự hiểu token từ URL để thực hiện lệnh này
+        db.client.auth.update_user({"password": new_password})
+        return True, "Mật khẩu đã được cập nhật thành công!"
+    except Exception as e:
+        return False, f"Lỗi: {str(e)}"
