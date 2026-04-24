@@ -70,27 +70,37 @@ def roadmap():
     db_client = SupabaseClient()
     ai_client = OpenAIClient()
 
-    # 1. QUẢN LÝ DỮ LIỆU
+    # ==========================================
+    # 1. LỊCH SỬ & QUẢN LÝ DỮ LIỆU
+    # ==========================================
     existing_roadmaps = db_client.query_data("user_roadmaps", filters={"user_id": user_id}) or []
-    latest_roadmap = sorted(existing_roadmaps, key=lambda x: x['created_at'], reverse=True)[0] if existing_roadmaps else None
+    # Sắp xếp từ mới nhất đến cũ nhất
+    sorted_roadmaps = sorted(existing_roadmaps, key=lambda x: x.get('created_at', ''), reverse=True)
+    latest_roadmap = sorted_roadmaps[0] if sorted_roadmaps else None
 
-    with st.expander("🛡️ Quản lý & Kiểm soát Dữ liệu Lộ trình", expanded=(not latest_roadmap)):
-        if latest_roadmap:
-            st.success(f"✅ Hệ thống đang lưu trữ {len(existing_roadmaps)} phiên bản lộ trình.")
-            col_info, col_action = st.columns([3, 1])
-            with col_info:
-                st.caption(f"Lộ trình hiện tại: **{latest_roadmap['target_role']}** | Cập nhật: {latest_roadmap['created_at']}")
-                if st.checkbox("Xem dữ liệu JSON gốc đang lưu"):
-                    st.json(latest_roadmap['roadmap_json'])
-            with col_action:
-                if st.button("🗑️ Xóa dữ liệu", type="secondary", use_container_width=True):
-                    for rm in existing_roadmaps:
-                        db_client.delete_data("user_roadmaps", {"id": rm['id']})
-                    st.success("Đã xóa sạch lộ trình!")
-                    time.sleep(1)
-                    st.rerun()
+    with st.expander("🕒 Lịch sử & Quản lý Lộ trình", expanded=False):
+        if sorted_roadmaps:
+            st.markdown(f"**Hệ thống đang lưu trữ {len(sorted_roadmaps)} phiên bản lộ trình của bạn:**")
+            
+            # Duyệt qua từng lộ trình trong lịch sử để tạo list
+            for idx, rm in enumerate(sorted_roadmaps):
+                with st.container(border=True):
+                    c_info, c_del = st.columns([4, 1], vertical_alignment="center")
+                    with c_info:
+                        # Đánh dấu bản mới nhất cho người dùng dễ nhận biết
+                        is_latest_tag = "🌟 **(Đang áp dụng)**" if idx == 0 else "🕒 (Bản lưu trữ)"
+                        st.markdown(f"**{rm.get('target_role', 'Chưa rõ mục tiêu')}** {is_latest_tag}")
+                        st.caption(f"Thời gian tạo: {rm.get('created_at', 'Không rõ')[:16]} | Khung thời gian: {rm.get('timeframe', '')}")
+                    with c_del:
+                        # Mỗi lộ trình có một nút Xóa với key độc nhất (dựa vào ID)
+                        if st.button("🗑️ Xóa bản này", key=f"del_history_{rm['id']}", type="secondary", use_container_width=True):
+                            db_client.delete_data("user_roadmaps", {"id": rm['id']})
+                            st.toast("Đã dọn dẹp lộ trình cũ!", icon="✅")
+                            import time
+                            time.sleep(1)
+                            st.rerun()
         else:
-            st.info("💡 Chưa có lộ trình nào. Dữ liệu sẽ được lưu minh bạch tại đây.")
+            st.info("💡 Bạn chưa tạo lộ trình nào.")
 
     st.divider()
 
