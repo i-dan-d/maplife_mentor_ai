@@ -64,21 +64,15 @@ def main():
     # 1. GIAO DIỆN ĐĂNG NHẬP (CANH GIỮA MÀN HÌNH)
     # ==========================================
     if st.session_state.auth_user is None:
-        # Tạo khoảng trống phía trên để đẩy form xuống giữa
         st.write("")
-        st.write("")
+        st.markdown("<h1 style='text-align: center; color: #2E7D32; font-size: 3rem;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 1.2rem; color: #555; margin-bottom: 2rem;'>Người bạn đồng hành AI cho sự nghiệp của bạn</p>", unsafe_allow_html=True)
         
-        # Tiêu đề Canh giữa
-        st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>AI Personal Career Mentor</p>", unsafe_allow_html=True)
-        st.write("")
-        
-        # Dùng st.columns để ép form vào giữa (Tỉ lệ 1 : 1.2 : 1)
         col1, col2, col3 = st.columns([1, 1.2, 1])
-        
         with col2:
-            with st.container(border=True): 
-                tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
+            # SỬ DỤNG CLASS CUSTOM-CARD ĐÃ ĐỊNH NGHĨA TRONG UI_FACTORY
+            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+            tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
             with tab_login:
                 email = st.text_input("Email", key="login_email")
                 password = st.text_input("Mật khẩu", type="password", key="login_pass")
@@ -113,7 +107,7 @@ def main():
                             "id": res.user.id, "name": new_email.split("@")[0], "email": new_email, "profile_data": {}
                         })
                         st.success("Đăng ký thành công! Hãy chuyển sang tab Đăng nhập.")
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # ==========================================
     # 2. GIAO DIỆN CHÍNH (TOP NAVIGATION MENU)

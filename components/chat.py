@@ -5,6 +5,7 @@ import streamlit as st
 import uuid
 from core.openai_client import OpenAIClient
 from core.supabase_client import SupabaseClient
+import time
 
 def chat_interface():
     # ==========================================
@@ -184,7 +185,15 @@ def chat_interface():
                         payload = [{"role": "system", "content": system_instruction}] + payload_history
 
                         response = ai_client.generate_response(payload)
-                        st.markdown(response)
+                        # Thay cho st.markdown(response)
+                        placeholder = st.empty()
+                        full_response = ""
+                        # Mô phỏng hiệu ứng AI đang gõ chữ
+                        for chunk in response.split():
+                            full_response += chunk + " "
+                            time.sleep(0.05) # Tốc độ gõ
+                            placeholder.markdown(full_response + "▌")
+                        placeholder.markdown(full_response)
             
             st.session_state.messages.append({"role": "assistant", "content": response})
             db_client.insert_data("chat_history", {
