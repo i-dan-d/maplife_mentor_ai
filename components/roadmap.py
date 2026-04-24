@@ -16,7 +16,7 @@ def clean_json_string(raw_text):
     return cleaned.strip()
 
 def render_timeline_ui(roadmap_data):
-    """Hàm vẽ Timeline Dọc chuẩn UI/UX, viết trên 1 dòng HTML để không lỗi Code Block"""
+    """Hàm vẽ Timeline Dọc chuẩn UI/UX"""
     st.info(f"💡 **Chiến lược tổng quan:** {roadmap_data.get('overall_strategy', 'Không có')}")
     
     st.markdown("""
@@ -34,28 +34,29 @@ def render_timeline_ui(roadmap_data):
     </style>
     """, unsafe_allow_html=True)
 
-    # KHÔNG THỤT LỀ HTML ĐỂ TRÁNH LỖI STREAMLIT MARKDOWN
     html_content = '<div class="timeline">'
     for idx, phase in enumerate(roadmap_data.get("phases", [])):
         html_content += f'<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content">'
         html_content += f'<div class="timeline-title">📍 Giai đoạn {idx+1}: {phase.get("phase_name", "")}</div>'
         
         for task in phase.get("milestones", []):
-            t_type = task.get("type", "skill")
-            badge_class = f"badge-{t_type}" if t_type in ["skill", "cert", "project"] else "badge-skill"
-            icon = "📘" if t_type == "skill" else "📜" if t_type == "cert" else "🚀" if t_type == "project" else "📌"
+            is_done = task.get("status") == "completed"
             
-            html_content += f'<div style="margin-bottom: 12px; padding: 10px; background: #fafafa; border-radius: 10px; border-left: 3px solid #eee;">'
-            html_content += f'<div class="task-badge {badge_class}">{t_type.upper()}</div>'
-            html_content += f'<div style="display: flex; justify-content: space-between; align-items: center;">'
+            t_type = task.get("type", "skill")
+            badge_class = f"badge-{t_type}"
+            icon = "✅" if is_done else ("📘" if t_type == "skill" else "🚀")
+            
+            text_style = "text-decoration: line-through; color: #9E9E9E;" if is_done else "color: #333;"
+            bg_style = "background: #f0f0f0;" if is_done else "background: #fafafa;"
+
+            html_content += f'<div style="margin-bottom: 12px; padding: 10px; {bg_style} border-radius: 10px; border-left: 3px solid {"#2E7D32" if is_done else "#eee"};">'
+            html_content += f'<div class="task-badge {badge_class}">{t_type.upper()} {"(Xong)" if is_done else ""}</div>'
+            html_content += f'<div style="display: flex; justify-content: space-between; align-items: center; {text_style}">'
             html_content += f'<span>{icon} <b>{task.get("task", "")}</b></span>'
-            if task.get("estimated_hours"):
-                html_content += f'<span style="font-size: 0.8em; color: #2E7D32; font-weight: bold;">⏳ {task.get("estimated_hours")}h</span>'
             html_content += '</div></div>'
             
         html_content += '</div></div>'
     html_content += '</div>'
-
     st.markdown(html_content, unsafe_allow_html=True)
 
 def roadmap():
@@ -69,9 +70,7 @@ def roadmap():
     db_client = SupabaseClient()
     ai_client = OpenAIClient()
 
-    # ==========================================
-    # 1. QUẢN LÝ DỮ LIỆU LỘ TRÌNH
-    # ==========================================
+    # 1. QUẢN LÝ DỮ LIỆU
     existing_roadmaps = db_client.query_data("user_roadmaps", filters={"user_id": user_id}) or []
     latest_roadmap = sorted(existing_roadmaps, key=lambda x: x['created_at'], reverse=True)[0] if existing_roadmaps else None
 
@@ -87,17 +86,15 @@ def roadmap():
                 if st.button("🗑️ Xóa dữ liệu", type="secondary", use_container_width=True):
                     for rm in existing_roadmaps:
                         db_client.delete_data("user_roadmaps", {"id": rm['id']})
-                    st.success("Đã xóa sạch lộ trình khỏi hệ thống!")
+                    st.success("Đã xóa sạch lộ trình!")
                     time.sleep(1)
                     st.rerun()
         else:
-            st.info("💡 Chưa có lộ trình nào. Dữ liệu lộ trình sẽ được lưu trữ dưới định dạng JSON minh bạch tại đây.")
+            st.info("💡 Chưa có lộ trình nào. Dữ liệu sẽ được lưu minh bạch tại đây.")
 
     st.divider()
 
-    # ==========================================
-    # 2. GIAO DIỆN CHÍNH (TABS)
-    # ==========================================
+    # 2. GIAO DIỆN CHÍNH
     with st.container(border=True):
         tab_view, tab_create = st.tabs(["🗺️ Lộ trình của tôi", "✨ AI Thiết kế Lộ trình mới"])
 
@@ -110,23 +107,46 @@ def roadmap():
                         roadmap_json = json.loads(roadmap_json)
                     render_timeline_ui(roadmap_json)
                 except Exception as e:
-                    st.error(f"Dữ liệu lộ trình bị lỗi định dạng: {e}")
+                    st.error(f"Dữ liệu lộ trình bị lỗi: {e}")
             else:
-                st.info("Chưa có dữ liệu. Hãy chuyển sang tab 'AI Thiết kế Lộ trình mới' để bắt đầu!")
+                st.info("Chưa có dữ liệu. Hãy chuyển sang tab tạo mới!")
 
         with tab_create:
             with st.form("roadmap_generator_form"):
                 st.markdown("### 🎯 Khai báo Mục tiêu")
                 col1, col2 = st.columns(2)
                 with col1:
-                    target_role = st.text_input("Vị trí hướng tới (VD: Data Scientist, HR Manager)")
+                    target_role = st.text_input("Vị trí hướng tới (VD: Data Scientist, Manager)")
                 with col2:
-                    timeframe = st.selectbox("Khung thời gian dự kiến", ["6 Tháng", "1 Năm", "2 Năm", "3 Năm+"])
+                    timeframe = st.selectbox("Khung thời gian", ["6 Tháng", "1 Năm", "2 Năm", "3 Năm+"])
                 
-                submit_btn = st.form_submit_button("🚀 Yêu cầu MAPLIFE lập kế hoạch", type="primary")
+                st.markdown("---")
+                st.caption("💡 Tùy chọn cách AI xây dựng lộ trình cho bạn:")
+                
+                # TẠO 2 NÚT SUBMIT SONG SONG
+                btn_col1, btn_col2 = st.columns(2)
+                with btn_col1:
+                    submit_pivot = st.form_submit_button("🔄 Kế thừa tiến độ (Chuyển nhánh)", type="primary")
+                with btn_col2:
+                    submit_new = st.form_submit_button("✨ Xây lại từ đầu", type="secondary")
 
-            if submit_btn and target_role:
-                with st.spinner("🔄 Đang nạp Hồ sơ CV và Tính cách từ Database..."):
+            # XỬ LÝ KHI NGƯỜI DÙNG BẤM 1 TRONG 2 NÚT
+            if (submit_pivot or submit_new) and target_role:
+                keep_progress = submit_pivot # True nếu chọn Kế thừa
+                
+                done_skills = []
+                if keep_progress and latest_roadmap:
+                    old_json = latest_roadmap['roadmap_json']
+                    if isinstance(old_json, str):
+                        try: old_json = json.loads(old_json)
+                        except: old_json = {}
+                        
+                    for p in old_json.get("phases", []):
+                        for m in p.get("milestones", []):
+                            if m.get("status") == "completed":
+                                done_skills.append(m.get("task"))
+
+                with st.spinner("🔄 Đang phân tích dữ liệu..."):
                     all_docs = db_client.query_data("documents", select_query="id, content, metadata") or []
                     latest_cv, latest_test = "", ""
                     for doc in all_docs:
@@ -140,47 +160,35 @@ def roadmap():
                             elif meta.get("source") == "personality_test":
                                 latest_test = doc.get('content')
 
-                with st.spinner("🧠 AI đang tính toán lộ trình tối ưu nhất (Khoảng 10-15s)..."):
-                    system_prompt = f"""Bạn là MAPLIFE AI, Kiến trúc sư Lộ trình Sự nghiệp.
-                    Hồ sơ người dùng hiện tại:
-                    <USER_PROFILE>
-                    <CV>{latest_cv if latest_cv else 'Trống'}</CV>
-                    <PERSONALITY>{latest_test if latest_test else 'Trống'}</PERSONALITY>
-                    </USER_PROFILE>
-
+                with st.spinner("🧠 AI đang tính toán lộ trình..."):
+                    skills_context = f"DỮ LIỆU ĐÃ CÓ: Người dùng ĐÃ THÀNH THẠO các kỹ năng: {', '.join(done_skills)}. KHÔNG bắt học lại các phần này, hãy dùng nó làm nền tảng đầu tiên." if done_skills else ""
+                    
+                    system_prompt = f"""Bạn là MAPLIFE AI, Kiến trúc sư Sự nghiệp.
+                    CV: {latest_cv[:500] if latest_cv else 'Trống'}
+                    Tính cách: {latest_test if latest_test else 'Trống'}
                     MỤC TIÊU: {target_role} | THỜI GIAN: {timeframe}
+                    {skills_context}
 
-                    LỆNH TỐI CAO: BẮT BUỘC trả về 1 đối tượng JSON duy nhất. Không giải thích thêm.
+                    Trả về DUY NHẤT 1 JSON:
                     {{
-                      "target_role": "{target_role}",
-                      "timeframe": "{timeframe}",
-                      "overall_strategy": "Câu tóm tắt chiến lược...",
-                      "phases": [
-                        {{
-                          "phase_name": "Tên giai đoạn 1",
-                          "milestones": [
-                            {{"task": "Tên công việc", "status": "pending", "type": "skill", "estimated_hours": 50}}
-                          ]
-                        }}
-                      ]
+                      "target_role": "{target_role}", "timeframe": "{timeframe}", "overall_strategy": "...",
+                      "phases": [ {{ "phase_name": "...", "milestones": [ {{"task": "...", "status": "pending", "type": "skill", "estimated_hours": 50}} ] }} ]
                     }}
-                    Loại task (type) chỉ được chọn: skill, cert, project, knowledge.
                     """
                     try:
                         raw_response = ai_client.generate_response([{"role": "system", "content": system_prompt}], max_tokens=5000)
-                        clean_str = clean_json_string(raw_response)
-                        roadmap_data = json.loads(clean_str)
+                        roadmap_data = json.loads(clean_json_string(raw_response))
                         
-                        db_client.insert_data("user_roadmaps", {
-                            "user_id": user_id,
-                            "target_role": target_role,
-                            "timeframe": timeframe,
-                            "roadmap_json": roadmap_data
-                        })
-                        
-                        st.success("🎉 Tạo lộ trình thành công! Đang chuyển hướng...")
+                        # Nhồi lại các kỹ năng đã có vào Phase đầu tiên để đồng bộ UI
+                        if keep_progress and done_skills:
+                            inherited_phase = {"phase_name": "Nền tảng đã tích lũy", "milestones": []}
+                            for skill in done_skills:
+                                inherited_phase["milestones"].append({"task": skill, "status": "completed", "type": "skill"})
+                            roadmap_data["phases"].insert(0, inherited_phase)
+
+                        db_client.insert_data("user_roadmaps", {"user_id": user_id, "target_role": target_role, "timeframe": timeframe, "roadmap_json": roadmap_data})
+                        st.success("🎉 Tạo lộ trình thành công!")
                         time.sleep(1)
                         st.rerun()
                     except Exception as e:
-                        st.error("AI đang quá tải hoặc cấu trúc trả về bị lệch. Vui lòng thử lại!")
-                        st.code(str(e))
+                        st.error("AI đang quá tải, vui lòng thử lại!")
