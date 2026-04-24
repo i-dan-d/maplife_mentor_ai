@@ -35,14 +35,12 @@ def render_timeline_ui(roadmap_data):
     </style>
     """, unsafe_allow_html=True)
 
+    # VIẾT HTML TRÊN 1 DÒNG HOẶC KHÔNG THỤT LỀ ĐỂ TRÁNH LỖI MARKDOWN
     html_content = '<div class="timeline">'
     for idx, phase in enumerate(roadmap_data.get("phases", [])):
-        html_content += f'''
-        <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-                <div class="timeline-title">📍 Giai đoạn {idx+1}: {phase.get('phase_name', '')}</div>
-        '''
+        html_content += f'<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content">'
+        html_content += f'<div class="timeline-title">📍 Giai đoạn {idx+1}: {phase.get("phase_name", "")}</div>'
+        
         for task in phase.get("milestones", []):
             t_type = task.get("type", "skill")
             if t_type == "skill": icon = "📘"
@@ -53,13 +51,9 @@ def render_timeline_ui(roadmap_data):
             hours = task.get("estimated_hours", 0)
             hour_badge = f'<span class="task-time">⏳ {hours}h</span>' if hours else ''
             
-            html_content += f'''
-                <div class="task-item">
-                    <span class="task-icon">{icon}</span>
-                    <span class="task-text"><b>{task.get('task', '')}</b></span>
-                    {hour_badge}
-                </div>
-            '''
+            # Khối HTML này phải viết liền để không dính khoảng trắng thụt lề
+            html_content += f'<div class="task-item"><span class="task-icon">{icon}</span><span class="task-text"><b>{task.get("task", "")}</b></span>{hour_badge}</div>'
+            
         html_content += '</div></div>'
     html_content += '</div>'
 

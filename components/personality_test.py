@@ -47,19 +47,29 @@ def personality_test():
         st.warning("Vui lòng đăng nhập để sử dụng tính năng này.")
         return
 
-    # 1. LOAD DỮ LIỆU CŨ (Nếu có)
-    existing_docs = db_client.query_data("documents", filters={"metadata->>user_id": user_id, "metadata->>source": "personality_test"})
+    # ==========================================
+    # 1. LOAD DỮ LIỆU CŨ (ĐẢM BẢO LẤY BẢN MỚI NHẤT)
+    # ==========================================
+    all_docs = db_client.query_data("documents", filters={"metadata->>user_id": user_id, "metadata->>source": "personality_test"}) or []
+    
     saved_data = None
-    if existing_docs:
+    latest_doc = None
+    if all_docs:
+        # Sắp xếp danh sách theo thời gian tạo mới nhất
+        latest_doc = sorted(all_docs, key=lambda x: x.get('created_at', ''), reverse=True)[0]
         try:
-            saved_data = json.loads(existing_docs[0]['content'])
-        except:
+            saved_data = json.loads(latest_doc['content'])
+        except Exception as e:
             saved_data = None
 
-    # 2. GIAO DIỆN CHÍNH (Tabs bọc cả form và biểu đồ)
+    # Tách dữ liệu ra các biến an toàn để tránh lỗi Key Error
+    h_data = saved_data.get('holland', {}) if saved_data else {}
+    bf_data = saved_data.get('big_five', {}) if saved_data else {}
+
+    # ==========================================
+    # 2. GIAO DIỆN CHÍNH
+    # ==========================================
     with st.container(border=True):
-        
-        # CHUYỂN TAB RA NGOÀI CÙNG
         tab_h, tab_bf = st.tabs(["🎯 Mô hình Holland (RIASEC)", "🧠 Mô hình Big Five (OCEAN)"])
         
         # --- TAB HOLLAND ---
@@ -67,12 +77,12 @@ def personality_test():
             c1, c2 = st.columns([1, 1.2], gap="large")
             with c1:
                 st.subheader("📝 Nhập chỉ số")
-                h_r = st.slider("Realistic (Kỹ thuật)", 0, 100, saved_data['holland']['R'] if saved_data else 50)
-                h_i = st.slider("Investigative (Nghiên cứu)", 0, 100, saved_data['holland']['I'] if saved_data else 50)
-                h_a = st.slider("Artistic (Nghệ thuật)", 0, 100, saved_data['holland']['A'] if saved_data else 50)
-                h_s = st.slider("Social (Xã hội)", 0, 100, saved_data['holland']['S'] if saved_data else 50)
-                h_e = st.slider("Enterprising (Quản lý)", 0, 100, saved_data['holland']['E'] if saved_data else 50)
-                h_c = st.slider("Conventional (Nghiệp vụ)", 0, 100, saved_data['holland']['C'] if saved_data else 50)
+                h_r = st.slider("Realistic (Kỹ thuật)", 0, 100, h_data.get('R', 50))
+                h_i = st.slider("Investigative (Nghiên cứu)", 0, 100, h_data.get('I', 50))
+                h_a = st.slider("Artistic (Nghệ thuật)", 0, 100, h_data.get('A', 50))
+                h_s = st.slider("Social (Xã hội)", 0, 100, h_data.get('S', 50))
+                h_e = st.slider("Enterprising (Quản lý)", 0, 100, h_data.get('E', 50))
+                h_c = st.slider("Conventional (Nghiệp vụ)", 0, 100, h_data.get('C', 50))
             with c2:
                 st.subheader("📊 Bản đồ Định hướng")
                 fig_h = create_radar_chart(['R','I','A','S','E','C'], [h_r, h_i, h_a, h_s, h_e, h_c], "RIASEC Profile", "#2E7D32")
@@ -83,11 +93,11 @@ def personality_test():
             c3, c4 = st.columns([1, 1.2], gap="large")
             with c3:
                 st.subheader("📝 Nhập chỉ số")
-                bf_o = st.slider("Openness (Trải nghiệm)", 0, 100, saved_data['big_five']['O'] if saved_data else 50)
-                bf_c = st.slider("Conscientiousness (Kỷ luật)", 0, 100, saved_data['big_five']['C'] if saved_data else 50)
-                bf_e = st.slider("Extraversion (Hướng ngoại)", 0, 100, saved_data['big_five']['E'] if saved_data else 50)
-                bf_a = st.slider("Agreeableness (Hòa đồng)", 0, 100, saved_data['big_five']['A'] if saved_data else 50)
-                bf_n = st.slider("Neuroticism (Áp lực)", 0, 100, saved_data['big_five']['N'] if saved_data else 50)
+                bf_o = st.slider("Openness (Trải nghiệm)", 0, 100, bf_data.get('O', 50))
+                bf_c = st.slider("Conscientiousness (Kỷ luật)", 0, 100, bf_data.get('C', 50))
+                bf_e = st.slider("Extraversion (Hướng ngoại)", 0, 100, bf_data.get('E', 50))
+                bf_a = st.slider("Agreeableness (Hòa đồng)", 0, 100, bf_data.get('A', 50))
+                bf_n = st.slider("Neuroticism (Áp lực)", 0, 100, bf_data.get('N', 50))
             with c4:
                 st.subheader("📊 Bản đồ Phong cách")
                 fig_bf = create_radar_chart(['O','C','E','A','N'], [bf_o, bf_c, bf_e, bf_a, bf_n], "OCEAN Profile", "#1976D2")
@@ -95,7 +105,7 @@ def personality_test():
 
         st.divider()
 
-        # --- NHẬN ĐỊNH SƠ BỘ VÀ LƯU DỮ LIỆU ---
+        # --- NHẬN ĐỊNH VÀ NÚT LƯU ---
         st.subheader("💡 Nhận định nhanh từ AI")
         assessment_text = get_preliminary_assessment(
             {'R':h_r,'I':h_i,'A':h_a,'S':h_s,'E':h_e,'C':h_c},
@@ -110,8 +120,9 @@ def personality_test():
             }
             json_str = json.dumps(payload, ensure_ascii=False)
             
-            if saved_data:
-                db_client.update_data("documents", {"id": existing_docs[0]['id']}, {"content": json_str})
+            # Cập nhật ghi đè lên bản mới nhất thay vì tạo rác
+            if saved_data and latest_doc:
+                db_client.update_data("documents", {"id": latest_doc['id']}, {"content": json_str})
             else:
                 db_client.insert_data("documents", {"content": json_str, "metadata": {"user_id": user_id, "source": "personality_test"}})
             
