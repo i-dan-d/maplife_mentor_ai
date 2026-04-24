@@ -77,9 +77,8 @@ def main():
         col1, col2, col3 = st.columns([1, 1.2, 1])
         
         with col2:
-            st.markdown("<div class='login-wrapper'>", unsafe_allow_html=True)
-            tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
-            
+            with st.container(border=True): 
+                tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
             with tab_login:
                 email = st.text_input("Email", key="login_email")
                 password = st.text_input("Mật khẩu", type="password", key="login_pass")

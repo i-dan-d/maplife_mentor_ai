@@ -113,14 +113,17 @@ def chat_interface():
     with col_chat:
         st.header("💬 AI Mentor Chat")
         
-        # Hiển thị thông báo dữ liệu
         if has_any_data:
             st.caption("✅ Đã kết nối CV & Tính cách")
         
-        # Phần hiển thị tin nhắn (Giữ nguyên logic vẽ tin nhắn của cậu)
-        chat_container = st.container(height=500) # Tạo khung cuộn cho chat
+        # 🟢 THÊM 2 DÒNG BẢO HIỂM NÀY VÀO ĐÂY:
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+            
+        chat_container = st.container(height=500)
         with chat_container:
-            for message in st.session_state.messages:
+            # Lỗi ở dòng dưới này sẽ biến mất vì messages đã được tạo ở trên!
+            for message in st.session_state.messages: 
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
 
