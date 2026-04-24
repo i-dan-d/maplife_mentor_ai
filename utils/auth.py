@@ -26,3 +26,18 @@ def sign_in_user(email, password):
     except Exception as e:
         st.error(f"Lỗi đăng nhập: {str(e)}")
         return None
+def reset_password(email: str):
+    """Gửi email chứa liên kết đặt lại mật khẩu qua Supabase"""
+    try:
+        db = SupabaseClient()
+        # Hàm của Supabase để gửi link reset password
+        db.client.auth.reset_password_for_email(email)
+        return True, "Vui lòng kiểm tra hộp thư email (cả thư mục Spam) để đặt lại mật khẩu!"
+    except Exception as e:
+        # Xử lý thông báo lỗi thân thiện hơn
+        error_msg = str(e)
+        if "User not found" in error_msg:
+            return False, "Email này chưa được đăng ký trong hệ thống."
+        elif "rate_limit" in error_msg.lower():
+            return False, "Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút."
+        return False, f"Lỗi hệ thống: {error_msg}"

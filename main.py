@@ -87,7 +87,7 @@ def main():
         
         with col2:
             with st.container(border=True): 
-                tab_login, tab_signup = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký"])
+                tab_login, tab_signup, tab_forgot = st.tabs(["🔑 Đăng nhập", "📝 Đăng ký", "🆘 Quên mật khẩu"])
             with tab_login:
                 email = st.text_input("Email", key="login_email")
                 password = st.text_input("Mật khẩu", type="password", key="login_pass")
@@ -122,6 +122,25 @@ def main():
                             "id": res.user.id, "name": new_email.split("@")[0], "email": new_email, "profile_data": {}
                         })
                         st.success("Đăng ký thành công! Hãy chuyển sang tab Đăng nhập.")
+            with tab_forgot:
+                st.markdown("### Khôi phục mật khẩu")
+                st.caption("Nhập email bạn đã dùng để đăng ký. MAPLIFE sẽ gửi cho bạn một liên kết an toàn để đặt lại mật khẩu mới.")
+                
+                forgot_email = st.text_input("Email của bạn", key="forgot_email_input")
+                
+                if st.button("Gửi liên kết khôi phục", type="primary", use_container_width=True):
+                    if not forgot_email:
+                        st.warning("Vui lòng nhập email trước khi gửi.")
+                    else:
+                        with st.spinner("Đang gửi yêu cầu..."):
+                            # Nhớ import hàm reset_password từ utils.auth ở đầu file main.py nhé!
+                            from utils.auth import reset_password 
+                            success, msg = reset_password(forgot_email)
+                            
+                            if success:
+                                st.success(msg)
+                            else:
+                                st.error(msg)
             st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================================
