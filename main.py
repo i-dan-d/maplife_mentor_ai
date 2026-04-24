@@ -45,7 +45,16 @@ def main():
     
     # Khởi tạo cookie manager
     cookie_manager = stx.CookieManager(key="maplife_cookie_mgr")
-    
+    # ==========================================
+    # 🟢 BẮT ĐẦU FIX LỖI MẤT MENU (MÀN HÌNH CHỜ)
+    # ==========================================
+    if "app_loaded" not in st.session_state:
+        # Hiện dòng chữ chờ để trình duyệt kịp nạp Cookie về Python
+        st.markdown("<h3 style='text-align: center; color: #2E7D32; margin-top: 50px;'>🌱 MAPLIFE đang khôi phục dữ liệu...</h3>", unsafe_allow_html=True)
+        time.sleep(0.5) # Dừng 0.5 giây
+        st.session_state.app_loaded = True
+        st.rerun() # Chạy lại để load giao diện chính thức
+    # ==========================================
     if "auth_user" not in st.session_state:
         st.session_state.auth_user = None
         
