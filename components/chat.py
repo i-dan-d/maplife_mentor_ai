@@ -155,7 +155,8 @@ def chat_interface():
                             "book": ["sách", "đọc", "tài liệu", "giáo trình", "book"],
                             "courses": ["khóa học", "chứng chỉ", "đào tạo", "học", "course"],
                             "reddit_amas": ["kinh nghiệm", "thực tế", "phỏng vấn", "khuyên", "review", "làm sao"],
-                            "occupations": ["ngành", "nghề", "lương", "công việc", "tương lai", "lộ trình", "jd"]
+                            "occupations": ["ngành", "nghề", "lương", "công việc", "tương lai", "lộ trình", "jd"],
+                            "knowledge_base":["kinh nghiệm", "thực tế", "phỏng vấn", "khuyên","ngành", "nghề", "lương", "công việc", "tương lai"]
                         }
 
                         # Quét câu hỏi xem dính từ khóa của bảng nào

@@ -169,7 +169,7 @@ def roadmap():
                         
                         if query_embedding:
                             # 2. Quét qua 4 bảng trên Supabase
-                            tables = ["reddit_amas", "book", "courses", "occupations"]
+                            tables = ["reddit_amas", "book", "courses", "occupations", "knowledge_base"]
                             for table in tables:
                                 try:
                                     res = db_client.client.rpc('match_knowledge', {
