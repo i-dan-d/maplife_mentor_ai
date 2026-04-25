@@ -61,7 +61,7 @@ def progress_tracker():
         with col2:
             st.markdown(f"<h3 style='color: #2E7D32; text-align: right; margin: 0;'>{progress_percentage}%</h3>", unsafe_allow_html=True)
             
-        if progress_percentage == 100:
+        if progress_percentage == 100 and total_tasks > 0:
             st.balloons()
             st.success("🎉 Xuất sắc! Bạn đã hoàn thành toàn bộ mục tiêu của lộ trình này!")
 
@@ -84,12 +84,15 @@ def progress_tracker():
                 icon = "✅" if is_completed else "📌"
                 text_class = "completed-text" if is_completed else "pending-text"
                 task_key = f"task_{roadmap_id}_{p_idx}_{t_idx}"
+                task_name = task.get('task', f'Nhiệm vụ {t_idx}')
                 
                 col_check, col_text = st.columns([0.5, 9.5])
                 with col_check:
-                    new_status = st.checkbox("", value=is_completed, key=task_key, label_visibility="collapsed")
+                    # FIX LỖI STREAMLIT Ở ĐÂY: Truyền task_name vào để không bị rỗng, sau đó ẩn đi
+                    new_status = st.checkbox(f"Xong {task_name}", value=is_completed, key=task_key, label_visibility="collapsed")
+                    
                 with col_text:
-                    st.markdown(f"<span class='{text_class}'>{icon} {task.get('task', '')} ({task.get('estimated_hours', 0)}h)</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='{text_class}'>{icon} {task_name} ({task.get('estimated_hours', 0)}h)</span>", unsafe_allow_html=True)
 
                 if new_status != is_completed:
                     task["status"] = "completed" if new_status else "pending"
