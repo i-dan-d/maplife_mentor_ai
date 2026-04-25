@@ -9,6 +9,7 @@ from components.cv_analyzer import cv_analyzer
 from components.roadmap import roadmap
 from components.progress import progress_tracker
 from components.vision_board import vision_board
+from components.community import community_board
 from core.supabase_client import SupabaseClient
 from utils.auth import sign_up_user, sign_in_user
 from utils.ui_factory import setup_page_css
@@ -223,7 +224,7 @@ def main():
         # Thanh Menu Ngang (Horizontal)
         choice = option_menu(
             menu_title=None,  # Ẩn tiêu đề để menu nằm ngang đẹp hơn
-            options=["AI Chat", "Tính cách", "Hồ sơ CV", "Lộ trình", "Tiến độ", "Vision Board"],
+            options=["AI Chat", "Tính cách", "Hồ sơ CV", "Lộ trình", "Tiến độ", "Vision Board", "Community"],
             icons=["chat-quote-fill", "person-lines-fill", "file-earmark-person", "map-fill", "bar-chart-steps", "easel-fill"],
             default_index=0,
             orientation="horizontal", # <-- PHÉP MÀU NẰM Ở ĐÂY
@@ -259,6 +260,8 @@ def main():
             progress_tracker()
         elif choice == "Vision Board":
             vision_board()
+        elif choice == "Community":
+            community_board()
 # Bắt đầu chạy ứng dụng (Không còn code test)
 if __name__ == "__main__":
     main()
