@@ -27,12 +27,14 @@ Getting started with MAPLIFE is a seamless, 4-step journey:
 * **AI Generation:** The system fetches real-world data (Courses, Books) via Vector Search and builds a phase-by-phase timeline tailored specifically to the skills you currently lack.
 
 ### 3️⃣ Step 3: Execution & Tracking (Action)
-* **Track Progress:** Use the `Tiến độ` (Progress) tab to check off completed milestones. 
+* **Track Progress:** Use the `Tiến độ` (Progress) tab to check off completed milestones.
+* **Mental Health Tracking:** Along with tracking task completion, the system monitors your emotional state and stress levels to provide timely motivational support and help prevent burnout. 
 * **Gamification:** Watch your progress bar fill up and earn motivational feedback from the system to stay on track.
 
 ### 4️⃣ Step 4: Continuous Mentoring & Networking (Support)
 * **AI Mentor Chat:** Stuck on a task? Go to `AI Chat`. The AI already knows your CV, your roadmap, and your current progress. Ask it for interview tips or learning strategies.
 * **Community Feed:** Jump into the `Cộng đồng` tab to share your achievements, ask for human advice, and upvote inspiring stories from peers.
+* **Dynamic Social Matching:** The platform automatically groups you with users sharing similar personality traits (Holland/Big Five) and career goals, making it easy to find study buddies or professional connections.
 
 ---
 
