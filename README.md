@@ -1,49 +1,73 @@
-# MAPLIFE - AI Personal Career Mentor
-
-**An intelligent platform that helps young people build personalized career development roadmaps**
+<div align="center">
+  <h1>🌱 MAPLIFE - AI Personal Career Mentor</h1>
+  <p><b>An intelligent, data-driven platform that helps young people build personalized career development roadmaps.</b></p>
+  <p><i>Developed by Team 3 - Data for Impact 2026</i></p>
+</div>
 
 ---
 
 ## 📋 Project Overview
 
-**MAPLIFE** is a web-based AI mentoring platform designed to support young people (especially students and fresh graduates) in navigating their personal and career development journey.
+In a world of information overload, over 75% of young professionals face career crises and lack clear direction. **MAPLIFE** is a web-based AI mentoring platform designed to solve this by acting as your **Personal AI Career Coach**. 
 
-Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven approaches to:
+Instead of generic advice, MAPLIFE uses advanced Retrieval-Augmented Generation (RAG) and Vector Databases to combine your personal identity (CV, Personality) with real-world industry data (Reddit AMAs, Professional Books, Online Courses) to generate highly actionable career paths.
 
-- Analyze user's personality, goals, and behaviors
-- Generate clear, personalized career roadmaps
-- Recommend suitable actions, courses, and resources
-- Track progress with gamification and work-life balance features
-- Connect users with mentors and like-minded community
+---
+
+## 🗺️ User Workflow: How to use MAPLIFE
+
+Getting started with MAPLIFE is a seamless, 4-step journey:
+
+### 1️⃣ Step 1: Identity Initialization (Self-Discovery)
+* **Upload CV:** Navigate to the `Hồ sơ CV` tab. The AI will extract your skills, strengths, and areas for improvement.
+* **Personality Test:** Go to the `Tính cách` tab. Take the integrated Holland Code / Big Five assessment so the AI understands your work style.
+
+### 2️⃣ Step 2: Multi-Source Career Mapping (Planning)
+* **Set a Goal:** Head over to the `Lộ trình` (Roadmap) tab and enter your dream role (e.g., "Data Analyst in 1 Year").
+* **AI Generation:** The system fetches real-world data (Courses, Books) via Vector Search and builds a phase-by-phase timeline tailored specifically to the skills you currently lack.
+
+### 3️⃣ Step 3: Execution & Tracking (Action)
+* **Track Progress:** Use the `Tiến độ` (Progress) tab to check off completed milestones. 
+* **Gamification:** Watch your progress bar fill up and earn motivational feedback from the system to stay on track.
+
+### 4️⃣ Step 4: Continuous Mentoring & Networking (Support)
+* **AI Mentor Chat:** Stuck on a task? Go to `AI Chat`. The AI already knows your CV, your roadmap, and your current progress. Ask it for interview tips or learning strategies.
+* **Community Feed:** Jump into the `Cộng đồng` tab to share your achievements, ask for human advice, and upvote inspiring stories from peers.
 
 ---
 
 ## ✨ Key Features
 
-- **💬 AI Mentor Chat**: Intelligent conversation based on your personal data and history
-- **🧪 Personality Assessment**: Big Five, Holland Code, and custom tests
-- **📄 CV Analyzer**: Upload CV and get job matching insights
-- **🛤️ Dynamic Career Roadmap**: Build, visualize, and adjust your career path
-- **📊 Progress & Gamification**: Track achievements, earn points, create Vision Board, and generate Year Wrap-up
-- **🔗 Networking**: Connect with mentors and peers
+- **🧠 Context-Aware AI Chat**: Intelligent conversation grounded in your personal data and vector-searched industry knowledge.
+- **🧬 Deep Profiling**: CV parsing and automated Personality Assessments.
+- **🛤️ Dynamic Multi-Source Roadmap**: Career paths built not just on LLM logic, but injected with real-world references (books, courses, JD standards).
+- **📊 Gamified Progress Tracker**: Interactive checklists, progress bars, and a visual Vision Board.
+- **🌐 Community Hub**: A built-in social feed for peer-to-peer networking, Q&A, and achievement sharing.
 
 ---
 
 ## 🛠 Technology Stack
 
-- **Frontend**: Streamlit
-- **Backend**: Python
-- **LLM & Embedding**: `claude-sonnet-4-6` + `text-embedding-3-small`
-- **Vector Database**: Supabase (pgvector)
-- **Local Vector Search**: FAISS
-- **Structured Database**: Supabase PostgreSQL
+* **Frontend:** [Streamlit](https://streamlit.io/) (Python)
+* **Backend Logic:** Python 3.10+
+* **Core AI Engine:** `claude-sonnet-4-6` (Logic) + `text-embedding-3-small` (Vectorization)
+* **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
+* **Vector Search:** Supabase `pgvector` & Custom RPC Functions
+* **Data Processing:** FAISS (Local Vector Search)
 
 ---
 
-## 🚀 How to Run the Project
+## 🚀 Getting Started (Installation Guide)
 
-### 1. Clone the repository
+Follow these steps to run MAPLIFE on your local machine.
+
+### 1. Prerequisites
+* Python 3.10 or higher
+* Git
+* A Supabase Account (with your database and RLS policies configured)
+* API Keys for OpenAI / Anthropic
+
+### 2. Clone the Repository
 ```bash
-git clone https://github.com/i-dan-d/maplife_mentor_ai
+git clone [https://github.com/i-dan-d/maplife_mentor_ai.git](https://github.com/i-dan-d/maplife_mentor_ai.git)
 cd maplife_mentor_ai
-streamlit run main.py
