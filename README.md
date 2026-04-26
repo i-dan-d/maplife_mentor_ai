@@ -38,11 +38,14 @@ Getting started with MAPLIFE is a seamless, 4-step journey:
 
 ## ✨ Key Features
 
-- **🧠 Context-Aware AI Chat**: Intelligent conversation grounded in your personal data and vector-searched industry knowledge.
-- **🧬 Deep Profiling**: CV parsing and automated Personality Assessments.
-- **🛤️ Dynamic Multi-Source Roadmap**: Career paths built not just on LLM logic, but injected with real-world references (books, courses, JD standards).
-- **📊 Gamified Progress Tracker**: Interactive checklists, progress bars, and a visual Vision Board.
-- **🌐 Community Hub**: A built-in social feed for peer-to-peer networking, Q&A, and achievement sharing.
+- **💬 AI Mentor Chat**: Intelligent conversation based on your personal data and history
+- **🧪 Personality Assessment**: Big Five, Holland Code, and custom tests
+- **📄 CV Analyzer**: Upload CV and get job matching insights
+- **🛤️ Dynamic Career Roadmap**: Build, visualize, and adjust your career path
+- **📊 Progress & Gamification**: Track achievements, earn points, create Vision Board, and generate Year Wrap-up
+- **🤝 Social Matching (Dynamic Clustering)**: Automatically group and connect users with similar personality traits (Holland/Big Five) and career goals using K-Means clustering.
+- **💚 Sentiment Analysis**: Analyze users' emotional states in real-time during chat conversations to track mental well-being trends and provide proactive psychological support.
+- **🔗 Networking**: Connect with mentors and peers
 
 ---
 
@@ -69,5 +72,7 @@ Follow these steps to run MAPLIFE on your local machine.
 
 ### 2. Clone the Repository
 ```bash
-git clone [https://github.com/i-dan-d/maplife_mentor_ai.git](https://github.com/i-dan-d/maplife_mentor_ai.git)
+git clone https://github.com/i-dan-d/maplife_mentor_ai
 cd maplife_mentor_ai
+pip install -r requirements.txt
+streamlit run main.py or python -m streamlit run main.py

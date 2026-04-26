@@ -249,3 +249,27 @@ def chat_interface():
                 "role": "assistant",
                 "content": response
             })
+
+            # ==========================================
+            # 🌟 CHẠY PHÂN TÍCH CẢM XÚC (SENTIMENT) CHO USER
+            # ==========================================
+            try:
+                from core.sentiment_engine import analyze_sentiment
+                sentiment_result = analyze_sentiment(prompt, ai_client)
+                
+                db_client.insert_data("sentiment_log", {
+                    "user_id": user_id,
+                    "session_id": st.session_state.current_session_id,
+                    "message_content": prompt,
+                    "sentiment_label": sentiment_result.get("sentiment_label"),
+                    "sentiment_score": sentiment_result.get("sentiment_score"),
+                    "dominant_emotion": sentiment_result.get("dominant_emotion"),
+                    "emotion_keywords": sentiment_result.get("emotion_keywords", []),
+                    "needs_support": sentiment_result.get("needs_support", False),
+                    "raw_analysis": sentiment_result.get("raw_analysis")
+                })
+                
+                if sentiment_result.get("needs_support"):
+                    st.toast("💚 MAPLIFE luôn ở đây nếu bạn cần chia sẻ. Đừng quá áp lực nhé!", icon="💚")
+            except Exception as e:
+                print(f"Lỗi chạy sentiment analysis: {e}")
