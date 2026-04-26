@@ -226,7 +226,7 @@ def main():
             menu_title=None,  # Ẩn tiêu đề để menu nằm ngang đẹp hơn
             options=["AI Chat", "Tính cách", "Hồ sơ CV", "Lộ trình", "Tiến độ", "Vision Board", "Community"],
             icons=["chat-quote-fill", "person-lines-fill", "file-earmark-person", "map-fill", "bar-chart-steps", "easel-fill"],
-            default_index=1,
+            default_index=0,
             orientation="horizontal", # <-- PHÉP MÀU NẰM Ở ĐÂY
             styles={
                 "container": {"padding": "0!important", "max-width": "100%", "border-radius": "8px", "background-color": "#ffffff", "border": "1px solid #eee"},
