@@ -25,6 +25,8 @@ Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven app
 - **📄 CV Analyzer**: Upload CV and get job matching insights
 - **🛤️ Dynamic Career Roadmap**: Build, visualize, and adjust your career path
 - **📊 Progress & Gamification**: Track achievements, earn points, create Vision Board, and generate Year Wrap-up
+- **🤝 Social Matching (Dynamic Clustering)**: Automatically group and connect users with similar personality traits (Holland/Big Five) and career goals using K-Means clustering.
+- **💚 Sentiment Analysis**: Analyze users' emotional states in real-time during chat conversations to track mental well-being trends and provide proactive psychological support.
 - **🔗 Networking**: Connect with mentors and peers
 
 ---
@@ -33,7 +35,7 @@ Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven app
 
 - **Frontend**: Streamlit
 - **Backend**: Python
-- **LLM & Embedding**: `claude-sonnet-4-6` + `text-embedding-3-small`
+- **LLM & Embedding**: `gemini-2.5-flash-lite` + `text-embedding-3-small`
 - **Vector Database**: Supabase (pgvector)
 - **Local Vector Search**: FAISS
 - **Structured Database**: Supabase PostgreSQL
@@ -46,4 +48,5 @@ Acting as a **personal AI mentor**, MAPLIFE uses advanced AI and data-driven app
 ```bash
 git clone https://github.com/i-dan-d/maplife_mentor_ai
 cd maplife_mentor_ai
-streamlit run main.py
+pip install -r requirements.txt
+streamlit run main.py or python -m streamlit run main.py
