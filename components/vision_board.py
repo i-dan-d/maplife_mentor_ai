@@ -85,7 +85,10 @@ def vision_board():
                 with st.spinner("Đang kết nối với vũ trụ để xin thông điệp..."):
                     prompt = f"Viết 1 câu châm ngôn truyền cảm hứng (dưới 25 chữ) dành riêng cho một người đang nỗ lực vươn tới vị trí {target_role}."
                     quote = ai_client.generate_response([{"role": "user", "content": prompt}], max_tokens=100)
-                    st.session_state.daily_quote = quote.strip('"')
+                    if quote:
+                        st.session_state.daily_quote = quote.strip('"')
+                    else:
+                        st.session_state.daily_quote = "Hãy luôn tin tưởng vào con đường bạn đã chọn!"
                     
             st.markdown(f"""
             <div style="background: linear-gradient(135deg, #E8F5E9, #C8E6C9); padding: 20px; border-radius: 15px; margin-top: 15px; border-left: 5px solid #2E7D32;">
