@@ -55,7 +55,7 @@ Getting started with MAPLIFE is a seamless, 4-step journey:
 
 * **Frontend:** [Streamlit](https://streamlit.io/) (Python)
 * **Backend Logic:** Python 3.10+
-* **Core AI Engine:** `claude-sonnet-4-6` (Logic) + `text-embedding-3-small` (Vectorization)
+* **Core AI Engine:** `gemini-2.5-flash-lite` (Logic) + `text-embedding-3-small` (Vectorization)
 * **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
 * **Vector Search:** Supabase `pgvector` & Custom RPC Functions
 * **Data Processing:** FAISS (Local Vector Search)
