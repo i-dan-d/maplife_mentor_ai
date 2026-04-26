@@ -141,7 +141,8 @@ def main():
         
         # Tiêu đề Canh giữa
         st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌱 MAPLIFE</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>AI Personal Career Mentor</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 18px; color: #666;'>DFI2026_NHÓM 3_MAPLIFE_Demo
+</p>", unsafe_allow_html=True)
         st.write("")
         
         # Dùng st.columns để ép form vào giữa (Tỉ lệ 1 : 1.2 : 1)
